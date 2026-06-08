@@ -277,10 +277,12 @@ export async function initStoreFromBlob(): Promise<void> {
     const { blobs } = await list({ prefix: BLOB_PATH })
     const blob = blobs.find(b => b.pathname === BLOB_PATH)
     if (blob) {
-      const res = await fetch(blob.downloadUrl)
+      // Private blobs: pass BLOB_READ_WRITE_TOKEN as Bearer auth
+      const res = await fetch(blob.downloadUrl, {
+        headers: { Authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` }
+      })
       if (res.ok) {
         const data = await res.json() as AppStore
-        // Merge: keep seed IDs as base, overlay persisted data
         _store = data
         return
       }
@@ -305,7 +307,7 @@ export async function persistStoreToBlob(): Promise<void> {
   try {
     const { put } = await import('@vercel/blob')
     await put(BLOB_PATH, JSON.stringify(_store), {
-      access: 'public',
+      access: 'private',
       addRandomSuffix: false,
       contentType: 'application/json',
     })
