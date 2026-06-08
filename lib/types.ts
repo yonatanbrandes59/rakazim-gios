@@ -295,3 +295,54 @@ export interface ChatStep {
   condition?: (answers: Record<string, unknown>) => boolean
   placeholder?: string
 }
+
+// ── WhatsApp / Automation / Brain ──────────────────────────────────────────
+
+export interface ConversationMessage {
+  id: string
+  candidate_id: string
+  direction: 'in' | 'out'
+  body: string
+  sent_at: string
+  status: 'sent' | 'delivered' | 'read' | 'failed' | 'received'
+  wa_message_id?: string
+  template_key?: string
+  created_at: string
+}
+
+export interface AutomationRule {
+  id: string
+  trigger: 'candidate_created' | 'questionnaire_completed' | '3_days_no_response' | 'coordinator_assigned' | 'fit_score_high'
+  condition_json?: Record<string, unknown>
+  action: 'send_whatsapp' | 'notify_coordinator' | 'notify_admin' | 'flag_priority'
+  template_key: string
+  delay_hours: number
+  active: boolean
+  created_at: string
+}
+
+export interface AutomationLog {
+  id: string
+  candidate_id: string
+  rule_id: string
+  fired_at: string
+  result: string
+}
+
+export type CandidatePriority = 'hot' | 'warm' | 'cold'
+export type NextAction = 'send_questionnaire' | 'follow_up' | 'schedule_call' | 'archive'
+
+export interface BrainAnalysis {
+  priority: CandidatePriority
+  nextAction: NextAction
+  bestTimeToContact: string
+  suggestedMessage: string
+  reasoning: string[]
+  urgencyScore: number // 0-10
+}
+
+export interface DailyBriefing {
+  priorityCount: number
+  actionItems: Array<{ candidateId: string; action: NextAction; reason: string }>
+  summary: string // Hebrew
+}

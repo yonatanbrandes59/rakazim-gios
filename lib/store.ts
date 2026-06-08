@@ -10,7 +10,8 @@ import { v4 as uuidv4 } from 'uuid'
 import {
   Candidate, RegionalCoordinator, OpenPosition,
   MessageTemplate, MessageQueueItem, ActivityLogItem,
-  AdminSetting, QuestionnaireAnswer
+  AdminSetting, QuestionnaireAnswer,
+  ConversationMessage, AutomationRule, AutomationLog,
 } from './types'
 
 export interface AppStore {
@@ -22,6 +23,9 @@ export interface AppStore {
   message_queue: MessageQueueItem[]
   activity_log: ActivityLogItem[]
   admin_settings: AdminSetting[]
+  conversation_messages: ConversationMessage[]
+  automation_rules: AutomationRule[]
+  automation_log: AutomationLog[]
 }
 
 // ── Seed data ──────────────────────────────────────────────────────────────
@@ -171,6 +175,9 @@ function buildSeedStore(): AppStore {
     admin_settings: [
       { id: 'setting-1', key: 'demo_mode', value: 'true', created_at: now, updated_at: now },
     ],
+    conversation_messages: [],
+    automation_rules: [],
+    automation_log: [],
   }
 }
 

@@ -5,6 +5,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { Input, Select } from '@/components/ui/Input'
 import { formatDate, formatDateTime, createWhatsAppLink } from '@/lib/utils'
+import { ConversationThread } from './ConversationThread'
 
 interface Props {
   candidate: Candidate
@@ -28,7 +29,7 @@ const USER_TYPE_COLORS: Record<ActivityLogItem['user_type'], string> = {
 }
 
 export function CandidateDetailModal({ candidate, coordinators, onClose, onUpdate }: Props) {
-  const [tab, setTab] = useState<'info' | 'notes' | 'history'>('info')
+  const [tab, setTab] = useState<'info' | 'notes' | 'history' | 'whatsapp'>('info')
   const [notes, setNotes] = useState(candidate.notes || '')
   const [status, setStatus] = useState(candidate.status)
   const [assignedCoord, setAssignedCoord] = useState(candidate.assigned_coordinator_id || '')
@@ -88,14 +89,14 @@ ${questionnaireLink}
   return (
     <Modal isOpen onClose={onClose} title={candidate.full_name} size="lg">
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-xl w-fit">
-        {(['info', 'notes', 'history'] as const).map(t => (
+      <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-xl w-fit flex-wrap">
+        {(['info', 'notes', 'history', 'whatsapp'] as const).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${tab === t ? 'bg-white shadow text-brand-700' : 'text-gray-600 hover:text-gray-800'}`}
           >
-            {{ info: 'מידע', notes: 'הערות', history: 'היסטוריה' }[t]}
+            {{ info: 'מידע', notes: 'הערות', history: 'היסטוריה', whatsapp: 'WhatsApp 💬' }[t]}
           </button>
         ))}
       </div>
@@ -210,6 +211,12 @@ ${questionnaireLink}
               ))}
             </ol>
           )}
+        </div>
+      )}
+
+      {tab === 'whatsapp' && (
+        <div className="min-h-[20rem]">
+          <ConversationThread candidate={candidate} />
         </div>
       )}
 

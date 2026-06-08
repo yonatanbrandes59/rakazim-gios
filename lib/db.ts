@@ -11,7 +11,8 @@ import {
   Candidate, RegionalCoordinator, OpenPosition,
   MessageTemplate, MessageQueueItem, ActivityLogItem,
   CandidateFilters, CreateCandidateDto, UpdateCandidateDto,
-  QuestionnaireAnswer
+  QuestionnaireAnswer,
+  ConversationMessage, AutomationRule, AutomationLog,
 } from './types'
 import {
   getStore, storeGet, storeFind, storeCreate,
@@ -395,5 +396,132 @@ export const activityDb = {
     return getStore().activity_log
       .filter(a => a.candidate_id === candidateId)
       .sort((a, b) => b.created_at.localeCompare(a.created_at))
+  },
+}
+
+// ── Conversations ──────────────────────────────────────────────────────────
+
+export const conversationsDb = {
+  async findByCandidateId(candidateId: string): Promise<ConversationMessage[]> {
+    await ensureBlob()
+    if (USE_SUPABASE && supabase) {
+      const { data, error } = await supabase.from('conversation_messages').select('*').eq('candidate_id', candidateId).order('sent_at', { ascending: true })
+      if (error) { console.error('[db] conversations.findByCandidateId:', error); return [] }
+      return data ?? []
+    }
+    return getStore().conversation_messages
+      .filter(m => m.candidate_id === candidateId)
+      .sort((a, b) => a.sent_at.localeCompare(b.sent_at))
+  },
+
+  async create(data: Omit<ConversationMessage, 'id' | 'created_at'>): Promise<ConversationMessage> {
+    await ensureBlob()
+    if (USE_SUPABASE && supabase) {
+      const now = new Date().toISOString()
+      const { data: row, error } = await supabase.from('conversation_messages').insert([{ ...data, id: uuidv4(), created_at: now }]).select().single()
+      if (error) throw error
+      return row
+    }
+    const store = getStore()
+    const now = new Date().toISOString()
+    const item: ConversationMessage = { ...data, id: uuidv4(), created_at: now }
+    store.conversation_messages.push(item)
+    await persistStoreToBlob()
+    return item
+  },
+
+  async findByWaMessageId(waMessageId: string): Promise<ConversationMessage | null> {
+    await ensureBlob()
+    if (USE_SUPABASE && supabase) {
+      const { data, error } = await supabase.from('conversation_messages').select('*').eq('wa_message_id', waMessageId).single()
+      if (error && error.code !== 'PGRST116') console.error('[db] conversations.findByWaMessageId:', error)
+      return data ?? null
+    }
+    return getStore().conversation_messages.find(m => m.wa_message_id === waMessageId) ?? null
+  },
+}
+
+// ── Automation Rules ───────────────────────────────────────────────────────
+
+export const automationRulesDb = {
+  async findAll(): Promise<AutomationRule[]> {
+    await ensureBlob()
+    if (USE_SUPABASE && supabase) {
+      const { data, error } = await supabase.from('automation_rules').select('*').order('created_at')
+      if (error) { console.error('[db] automationRules.findAll:', error); return [] }
+      return data ?? []
+    }
+    return [...getStore().automation_rules]
+  },
+
+  async findActive(): Promise<AutomationRule[]> {
+    await ensureBlob()
+    if (USE_SUPABASE && supabase) {
+      const { data, error } = await supabase.from('automation_rules').select('*').eq('active', true).order('created_at')
+      if (error) { console.error('[db] automationRules.findActive:', error); return [] }
+      return data ?? []
+    }
+    return getStore().automation_rules.filter(r => r.active)
+  },
+
+  async create(data: Omit<AutomationRule, 'id' | 'created_at'>): Promise<AutomationRule> {
+    await ensureBlob()
+    if (USE_SUPABASE && supabase) {
+      const now = new Date().toISOString()
+      const { data: row, error } = await supabase.from('automation_rules').insert([{ ...data, id: uuidv4(), created_at: now }]).select().single()
+      if (error) throw error
+      return row
+    }
+    const store = getStore()
+    const now = new Date().toISOString()
+    const item: AutomationRule = { ...data, id: uuidv4(), created_at: now }
+    store.automation_rules.push(item)
+    await persistStoreToBlob()
+    return item
+  },
+
+  async update(id: string, data: Partial<AutomationRule>): Promise<AutomationRule | null> {
+    await ensureBlob()
+    if (USE_SUPABASE && supabase) {
+      const { data: row, error } = await supabase.from('automation_rules').update(data).eq('id', id).select().single()
+      if (error) { console.error('[db] automationRules.update:', error); return null }
+      return row ?? null
+    }
+    const store = getStore()
+    const idx = store.automation_rules.findIndex(r => r.id === id)
+    if (idx === -1) return null
+    store.automation_rules[idx] = { ...store.automation_rules[idx], ...data }
+    await persistStoreToBlob()
+    return store.automation_rules[idx]
+  },
+}
+
+// ── Automation Log ─────────────────────────────────────────────────────────
+
+export const automationLogDb = {
+  async create(data: Omit<AutomationLog, 'id'>): Promise<AutomationLog> {
+    await ensureBlob()
+    if (USE_SUPABASE && supabase) {
+      const { data: row, error } = await supabase.from('automation_log').insert([{ ...data, id: uuidv4() }]).select().single()
+      if (error) throw error
+      return row
+    }
+    const store = getStore()
+    const item: AutomationLog = { ...data, id: uuidv4() }
+    store.automation_log.push(item)
+    await persistStoreToBlob()
+    return item
+  },
+
+  async findByCandidateId(candidateId: string): Promise<AutomationLog[]> {
+    await ensureBlob()
+    if (USE_SUPABASE && supabase) {
+      const { data, error } = await supabase.from('automation_log').select('*').eq('candidate_id', candidateId).order('fired_at', { ascending: false })
+      if (error) { console.error('[db] automationLog.findByCandidateId:', error); return [] }
+      return data ?? []
+    }
+    return getStore().automation_log
+      .filter(l => l.candidate_id === candidateId)
+      .sort((a, b) => b.fired_at.localeCompare(a.fired_at))
   },
 }

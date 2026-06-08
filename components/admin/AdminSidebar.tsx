@@ -11,6 +11,7 @@ const navItems = [
   { href: '/admin/matches',      icon: '🎯', label: 'התאמות' },
   { href: '/admin/coordinators', icon: '🗺️', label: 'רכזות אזוריות' },
   { href: '/admin/templates',    icon: '📝', label: 'תבניות הודעה' },
+  { href: '/admin/brain',        icon: '🧠', label: 'מוח AI' },
 ]
 
 export function AdminSidebar() {

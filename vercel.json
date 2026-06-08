@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/purge-old-answers",
       "schedule": "0 3 1 * *"
+    },
+    {
+      "path": "/api/cron/stale-candidates",
+      "schedule": "0 9 * * *"
     }
   ]
 }
