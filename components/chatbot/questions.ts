@@ -1,0 +1,236 @@
+import { ChatStep } from '@/lib/types'
+
+export const QUESTIONS: ChatStep[] = [
+  // Q1: Garin name
+  {
+    key: 'garin',
+    questionText: 'מאיזה גרעין אתה/את? (שם הגרעין)',
+    type: 'text',
+    placeholder: 'למשל: גרעין אדמות, גרעין ינון, גרעין הצפון...',
+  },
+
+  // Q2: Garin year
+  {
+    key: 'garin_year',
+    questionText: 'באיזו שנה היית בגרעין?',
+    type: 'options',
+    options: [
+      { value: '2018', label: '2018' },
+      { value: '2019', label: '2019' },
+      { value: '2020', label: '2020' },
+      { value: '2021', label: '2021' },
+      { value: '2022', label: '2022' },
+      { value: '2023', label: '2023' },
+      { value: '2024', label: '2024' },
+    ],
+  },
+
+  // Q3: Army role
+  {
+    key: 'army_role',
+    questionText: 'מה היה תפקידך בצבא?',
+    type: 'text',
+    placeholder: 'למשל: מ״כ, קצין, מדריכ/ה, תומ״ל...',
+    optional: true,
+  },
+
+  // Q4: Release date
+  {
+    key: 'release_date',
+    questionText: 'מתי אתה/את משתחרר/ת מהצבא? (תאריך שחרור)',
+    type: 'date',
+  },
+
+  // Q5: Looking for work
+  {
+    key: 'looking_for_work',
+    questionText: 'מתי תהיה/תהיי פנוי/ה לעבודה?',
+    type: 'options',
+    options: [
+      { value: 'now', label: 'כבר עכשיו 🔥' },
+      { value: 'one_two_months', label: 'בעוד חודש-חודשיים' },
+      { value: 'after_trip', label: 'אחרי טיול' },
+      { value: 'after_psychometric', label: 'אחרי פסיכומטרי/לימודים' },
+      { value: 'dont_know', label: 'עוד לא יודע/ת' },
+      { value: 'not_looking', label: 'לא מחפש/ת כרגע' },
+    ],
+  },
+
+  // Q6: Trip return date (conditional)
+  {
+    key: 'trip_return_date',
+    questionText: 'מתי אתה/את חוזר/ת מהטיול? (בערך)',
+    type: 'date',
+    optional: true,
+    condition: (answers) => answers['looking_for_work'] === 'after_trip',
+  },
+
+  // Q7: Studies end date (conditional)
+  {
+    key: 'studies_end_date',
+    questionText: 'מתי מסתיים הפסיכומטרי/לימודים? (בערך)',
+    type: 'date',
+    optional: true,
+    condition: (answers) => answers['looking_for_work'] === 'after_psychometric',
+  },
+
+  // Q8: Preferred region
+  {
+    key: 'preferred_region',
+    questionText: 'באיזה אזור תרצה/י לעבוד?',
+    type: 'options',
+    options: [
+      { value: 'north', label: 'צפון' },
+      { value: 'haifa_valleys', label: 'חיפה והעמקים' },
+      { value: 'sharon', label: 'שרון' },
+      { value: 'center', label: 'מרכז' },
+      { value: 'jerusalem', label: 'ירושלים' },
+      { value: 'south', label: 'דרום' },
+      { value: 'otef_negev', label: 'עוטף / נגב מערבי' },
+      { value: 'open', label: 'פתוח לכל אזור' },
+    ],
+  },
+
+  // Q9: Has driving license
+  {
+    key: 'has_driving_license',
+    questionText: 'יש לך רישיון נהיגה?',
+    type: 'confirm',
+    options: [
+      { value: 'true', label: 'כן ✅' },
+      { value: 'false', label: 'לא ❌' },
+    ],
+  },
+
+  // Q10: Has car
+  {
+    key: 'has_car',
+    questionText: 'יש לך רכב?',
+    type: 'confirm',
+    options: [
+      { value: 'true', label: 'כן ✅' },
+      { value: 'false', label: 'לא ❌' },
+    ],
+    condition: (answers) => answers['has_driving_license'] === 'true',
+  },
+
+  // Q11: Guidance experience
+  {
+    key: 'guidance_experience',
+    questionText: 'האם יש לך ניסיון בהדרכה? (מחנות, נוער, חינוך וכדומה)',
+    type: 'confirm',
+    options: [
+      { value: 'true', label: 'כן, יש לי ניסיון ✅' },
+      { value: 'false', label: 'לא ממש ❌' },
+    ],
+  },
+
+  // Q12: Leadership experience
+  {
+    key: 'leadership_experience',
+    questionText: 'האם יש לך ניסיון בהנהגה? (ראש צוות, מנהל פרויקט, פיקוד וכדומה)',
+    type: 'confirm',
+    options: [
+      { value: 'true', label: 'כן ✅' },
+      { value: 'false', label: 'לא ממש ❌' },
+    ],
+  },
+
+  // Q13: Interest in role
+  {
+    key: 'interest_in_role',
+    questionText: 'כמה אתה/את מעוניין/ת בתפקיד רכז/ת נוער?',
+    type: 'options',
+    options: [
+      { value: 'yes', label: 'מאוד מעוניין/ת! 🔥' },
+      { value: 'maybe', label: 'מתעניין/ת, רוצה לשמוע עוד' },
+      { value: 'not_sure', label: 'לא בטוח/ה' },
+      { value: 'not_relevant', label: 'לא בשבילי' },
+    ],
+  },
+
+  // Q14: What attracts you
+  {
+    key: 'role_attraction',
+    questionText: 'מה מושך אותך בתפקיד? (ניתן לבחור כמה)',
+    type: 'multiselect',
+    options: [
+      { value: 'impact', label: '🌱 להשפיע על נוער' },
+      { value: 'community', label: '🤝 בניית קהילה' },
+      { value: 'experience', label: '📚 ניסיון מקצועי' },
+      { value: 'leadership', label: '👑 הנהגה' },
+      { value: 'values', label: '💙 ערכים ושליחות' },
+      { value: 'salary', label: '💰 פרנסה' },
+    ],
+    condition: (answers) => answers['interest_in_role'] !== 'not_relevant',
+  },
+
+  // Q15: Work days per week
+  {
+    key: 'work_days_per_week',
+    questionText: 'כמה ימים בשבוע תוכל/י לעבוד?',
+    type: 'options',
+    options: [
+      { value: '2', label: '2 ימים' },
+      { value: '3', label: '3 ימים' },
+      { value: '4', label: '4 ימים' },
+      { value: '5', label: '5 ימים (משרה מלאה)' },
+    ],
+  },
+
+  // Q16: Can commit full year
+  {
+    key: 'can_commit_full_year',
+    questionText: 'האם תוכל/י להתחייב לשנה מלאה?',
+    type: 'confirm',
+    options: [
+      { value: 'true', label: 'כן, אני מתחייב/ת לשנה ✅' },
+      { value: 'false', label: 'לא בטוח/ה לגבי שנה מלאה' },
+    ],
+  },
+
+  // Q17: Preferred contact method
+  {
+    key: 'preferred_contact_method',
+    questionText: 'איך הכי נוח לך שנתקשר?',
+    type: 'options',
+    options: [
+      { value: 'whatsapp', label: '💬 וואטסאפ' },
+      { value: 'call', label: '📞 שיחת טלפון' },
+      { value: 'any', label: 'לא משנה לי' },
+    ],
+  },
+
+  // Q18: Best time to contact
+  {
+    key: 'best_time_to_contact',
+    questionText: 'מהי השעה הכי טובה לפנות אליך?',
+    type: 'options',
+    options: [
+      { value: 'morning', label: '☀️ בוקר (9:00-12:00)' },
+      { value: 'afternoon', label: '🌤️ צהריים (12:00-16:00)' },
+      { value: 'evening', label: '🌙 ערב (17:00-20:00)' },
+      { value: 'anytime', label: 'כל שעה' },
+    ],
+  },
+
+  // Q19: Has CV
+  {
+    key: 'has_cv',
+    questionText: 'האם יש לך קורות חיים מוכנים?',
+    type: 'confirm',
+    options: [
+      { value: 'true', label: 'כן, יש לי ✅' },
+      { value: 'false', label: 'עדיין לא' },
+    ],
+  },
+
+  // Q20: Open answer
+  {
+    key: 'open_answer',
+    questionText: 'יש משהו שחשוב לך שנדע? (רשות – ניתן לדלג)',
+    type: 'open',
+    placeholder: 'הרגשות, תקוות, שאלות, כל מה שעל הלב...',
+    optional: true,
+  },
+]
