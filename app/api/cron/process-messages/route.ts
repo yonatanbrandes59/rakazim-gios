@@ -2,18 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { candidatesDb } from '@/lib/db'
 import { processMessageQueue, sendReminderToCandidate } from '@/services/messagingService'
 
-// Minimum length enforced so that a weak / default secret is rejected at startup
+// Minimum length enforced so that a weak / default secret is rejected at request time
 const MIN_SECRET_LENGTH = 32
-
-// In production, CRON_SECRET must be explicitly set with sufficient length.
-if (
-  process.env.NODE_ENV === 'production' &&
-  (!process.env.CRON_SECRET || process.env.CRON_SECRET.length < MIN_SECRET_LENGTH)
-) {
-  throw new Error(
-    `[cron] CRON_SECRET env var must be set in production and be at least ${MIN_SECRET_LENGTH} characters. Set it in your Vercel dashboard.`
-  )
-}
 
 function validateCronSecret(req: NextRequest): boolean {
   const configuredSecret = process.env.CRON_SECRET
