@@ -15,11 +15,19 @@ import {
 } from './types'
 import {
   getStore, storeGet, storeFind, storeCreate,
-  storeUpdate, storeDelete
+  storeUpdate, storeDelete, initStoreFromBlob
 } from './store'
 import { generateToken } from './utils'
 
 const USE_SUPABASE = !!(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY)
+
+// ── Blob initialization (runs once per cold-start, skipped if Supabase used) ─
+let _blobReady: Promise<void> | null = null
+function ensureBlob(): Promise<void> {
+  if (USE_SUPABASE) return Promise.resolve()
+  if (!_blobReady) _blobReady = initStoreFromBlob()
+  return _blobReady
+}
 
 let supabase: SupabaseClient | null = null
 if (USE_SUPABASE) {
@@ -35,6 +43,7 @@ export const isDemoMode = !USE_SUPABASE
 
 export const candidatesDb = {
   async findAll(filters?: CandidateFilters): Promise<Candidate[]> {
+    await ensureBlob()
     if (USE_SUPABASE && supabase) {
       let q = supabase.from('candidates').select('*').order('created_at', { ascending: false })
       if (filters?.region) q = q.eq('preferred_region', filters.region)
@@ -63,6 +72,7 @@ export const candidatesDb = {
   },
 
   async findById(id: string): Promise<Candidate | null> {
+    await ensureBlob()
     if (USE_SUPABASE && supabase) {
       const { data } = await supabase.from('candidates').select('*').eq('id', id).single()
       return data
@@ -71,6 +81,7 @@ export const candidatesDb = {
   },
 
   async findByToken(token: string): Promise<Candidate | null> {
+    await ensureBlob()
     if (USE_SUPABASE && supabase) {
       const { data } = await supabase.from('candidates').select('*').eq('candidate_token', token).single()
       return data
@@ -79,6 +90,7 @@ export const candidatesDb = {
   },
 
   async create(dto: CreateCandidateDto): Promise<Candidate> {
+    await ensureBlob()
     const now = new Date().toISOString()
     const newCand: Omit<Candidate, 'id' | 'created_at' | 'updated_at'> = {
       ...dto,
@@ -97,6 +109,7 @@ export const candidatesDb = {
   },
 
   async update(id: string, dto: UpdateCandidateDto): Promise<Candidate | null> {
+    await ensureBlob()
     if (USE_SUPABASE && supabase) {
       const { data } = await supabase.from('candidates').update({ ...dto, updated_at: new Date().toISOString() }).eq('id', id).select().single()
       return data
@@ -105,6 +118,7 @@ export const candidatesDb = {
   },
 
   async delete(id: string): Promise<void> {
+    await ensureBlob()
     if (USE_SUPABASE && supabase) {
       await supabase.from('candidates').delete().eq('id', id)
       return
@@ -117,6 +131,7 @@ export const candidatesDb = {
 
 export const coordinatorsDb = {
   async findAll(): Promise<RegionalCoordinator[]> {
+    await ensureBlob()
     if (USE_SUPABASE && supabase) {
       const { data } = await supabase.from('regional_coordinators').select('*').order('region')
       return data ?? []
@@ -125,6 +140,7 @@ export const coordinatorsDb = {
   },
 
   async findById(id: string): Promise<RegionalCoordinator | null> {
+    await ensureBlob()
     if (USE_SUPABASE && supabase) {
       const { data } = await supabase.from('regional_coordinators').select('*').eq('id', id).single()
       return data
@@ -133,6 +149,7 @@ export const coordinatorsDb = {
   },
 
   async findByEmail(email: string): Promise<RegionalCoordinator | null> {
+    await ensureBlob()
     if (USE_SUPABASE && supabase) {
       const { data } = await supabase.from('regional_coordinators').select('*').eq('email', email).single()
       return data
@@ -141,6 +158,7 @@ export const coordinatorsDb = {
   },
 
   async create(data: Omit<RegionalCoordinator, 'id' | 'created_at' | 'updated_at'>): Promise<RegionalCoordinator> {
+    await ensureBlob()
     if (USE_SUPABASE && supabase) {
       const now = new Date().toISOString()
       const { data: row, error } = await supabase.from('regional_coordinators').insert([{ ...data, id: uuidv4(), created_at: now, updated_at: now }]).select().single()
@@ -151,6 +169,7 @@ export const coordinatorsDb = {
   },
 
   async update(id: string, data: Partial<RegionalCoordinator>): Promise<RegionalCoordinator | null> {
+    await ensureBlob()
     if (USE_SUPABASE && supabase) {
       const { data: row } = await supabase.from('regional_coordinators').update({ ...data, updated_at: new Date().toISOString() }).eq('id', id).select().single()
       return row
@@ -159,6 +178,7 @@ export const coordinatorsDb = {
   },
 
   async delete(id: string): Promise<void> {
+    await ensureBlob()
     if (USE_SUPABASE && supabase) {
       await supabase.from('regional_coordinators').delete().eq('id', id)
       return
@@ -171,6 +191,7 @@ export const coordinatorsDb = {
 
 export const positionsDb = {
   async findAll(region?: string): Promise<OpenPosition[]> {
+    await ensureBlob()
     if (USE_SUPABASE && supabase) {
       let q = supabase.from('open_positions').select('*').order('created_at', { ascending: false })
       if (region) q = q.eq('region', region)
@@ -183,6 +204,7 @@ export const positionsDb = {
   },
 
   async create(data: Omit<OpenPosition, 'id' | 'created_at' | 'updated_at'>): Promise<OpenPosition> {
+    await ensureBlob()
     if (USE_SUPABASE && supabase) {
       const now = new Date().toISOString()
       const { data: row, error } = await supabase.from('open_positions').insert([{ ...data, id: uuidv4(), created_at: now, updated_at: now }]).select().single()
@@ -193,6 +215,7 @@ export const positionsDb = {
   },
 
   async update(id: string, data: Partial<OpenPosition>): Promise<OpenPosition | null> {
+    await ensureBlob()
     if (USE_SUPABASE && supabase) {
       const { data: row } = await supabase.from('open_positions').update({ ...data, updated_at: new Date().toISOString() }).eq('id', id).select().single()
       return row
@@ -201,6 +224,7 @@ export const positionsDb = {
   },
 
   async delete(id: string): Promise<void> {
+    await ensureBlob()
     if (USE_SUPABASE && supabase) {
       await supabase.from('open_positions').delete().eq('id', id)
       return
@@ -213,6 +237,7 @@ export const positionsDb = {
 
 export const messagesDb = {
   async findAll(filters?: { status?: string; candidate_id?: string }): Promise<MessageQueueItem[]> {
+    await ensureBlob()
     if (USE_SUPABASE && supabase) {
       let q = supabase.from('message_queue').select('*').order('created_at', { ascending: false })
       if (filters?.status) q = q.eq('status', filters.status)
@@ -227,6 +252,7 @@ export const messagesDb = {
   },
 
   async create(data: Omit<MessageQueueItem, 'id' | 'created_at' | 'updated_at'>): Promise<MessageQueueItem> {
+    await ensureBlob()
     if (USE_SUPABASE && supabase) {
       const now = new Date().toISOString()
       const { data: row, error } = await supabase.from('message_queue').insert([{ ...data, id: uuidv4(), created_at: now, updated_at: now }]).select().single()
@@ -237,6 +263,7 @@ export const messagesDb = {
   },
 
   async update(id: string, data: Partial<MessageQueueItem>): Promise<MessageQueueItem | null> {
+    await ensureBlob()
     if (USE_SUPABASE && supabase) {
       const { data: row } = await supabase.from('message_queue').update({ ...data, updated_at: new Date().toISOString() }).eq('id', id).select().single()
       return row
@@ -249,6 +276,7 @@ export const messagesDb = {
 
 export const templatesDb = {
   async findAll(): Promise<MessageTemplate[]> {
+    await ensureBlob()
     if (USE_SUPABASE && supabase) {
       const { data } = await supabase.from('message_templates').select('*').eq('active', true)
       return data ?? []
@@ -277,6 +305,7 @@ export const templatesDb = {
 
 export const answersDb = {
   async findByCandidateId(candidateId: string): Promise<QuestionnaireAnswer[]> {
+    await ensureBlob()
     if (USE_SUPABASE && supabase) {
       const { data } = await supabase.from('questionnaire_answers').select('*').eq('candidate_id', candidateId).order('created_at')
       return data ?? []
@@ -302,6 +331,7 @@ export const answersDb = {
 
 export const activityDb = {
   async log(entry: Omit<ActivityLogItem, 'id' | 'created_at'>): Promise<void> {
+    await ensureBlob()
     const now = new Date().toISOString()
     if (USE_SUPABASE && supabase) {
       await supabase.from('activity_log').insert([{ ...entry, id: uuidv4(), created_at: now }])

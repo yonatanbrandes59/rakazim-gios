@@ -255,6 +255,10 @@ function buildSeedStore(): AppStore {
 // ── Module-level store ─────────────────────────────────────────────────────
 
 let _store: AppStore | null = null
+let _blobSaveTimer: ReturnType<typeof setTimeout> | null = null
+
+const BLOB_PATH = 'merakzim-store/state.json'
+const USE_BLOB = !!process.env.BLOB_READ_WRITE_TOKEN
 
 export function getStore(): AppStore {
   if (!_store) _store = buildSeedStore()
@@ -263,6 +267,51 @@ export function getStore(): AppStore {
 
 export function resetStore(): void {
   _store = buildSeedStore()
+}
+
+/** Load persisted state from Vercel Blob (called once on cold-start) */
+export async function initStoreFromBlob(): Promise<void> {
+  if (!USE_BLOB) return
+  try {
+    const { list } = await import('@vercel/blob')
+    const { blobs } = await list({ prefix: BLOB_PATH })
+    const blob = blobs.find(b => b.pathname === BLOB_PATH)
+    if (blob) {
+      const res = await fetch(blob.downloadUrl)
+      if (res.ok) {
+        const data = await res.json() as AppStore
+        // Merge: keep seed IDs as base, overlay persisted data
+        _store = data
+        return
+      }
+    }
+  } catch (e) {
+    console.warn('[store] Failed to load from blob:', e)
+  }
+  // First run or error: use seed data, persist it
+  if (!_store) _store = buildSeedStore()
+  void persistStoreToBlob()
+}
+
+/** Save current store to Vercel Blob (debounced, fire-and-forget) */
+export function scheduleBlobSave(): void {
+  if (!USE_BLOB) return
+  if (_blobSaveTimer) clearTimeout(_blobSaveTimer)
+  _blobSaveTimer = setTimeout(() => { void persistStoreToBlob() }, 500)
+}
+
+export async function persistStoreToBlob(): Promise<void> {
+  if (!USE_BLOB || !_store) return
+  try {
+    const { put } = await import('@vercel/blob')
+    await put(BLOB_PATH, JSON.stringify(_store), {
+      access: 'public',
+      addRandomSuffix: false,
+      contentType: 'application/json',
+    })
+  } catch (e) {
+    console.warn('[store] Failed to persist to blob:', e)
+  }
 }
 
 // ── Generic CRUD helpers ───────────────────────────────────────────────────
@@ -283,6 +332,7 @@ export function storeCreate<T extends { id: string; created_at: string; updated_
   const now = new Date().toISOString()
   const item = { ...data, id: uuidv4(), created_at: now, updated_at: now } as T
   ;(getStore()[table] as unknown as T[]).push(item)
+  scheduleBlobSave()
   return item
 }
 
@@ -295,6 +345,7 @@ export function storeUpdate<T extends { id: string; updated_at: string }>(
   const idx = arr.findIndex(i => i.id === id)
   if (idx === -1) return null
   arr[idx] = { ...arr[idx], ...data, updated_at: new Date().toISOString() }
+  scheduleBlobSave()
   return arr[idx]
 }
 
@@ -303,5 +354,6 @@ export function storeDelete(table: keyof AppStore, id: string): boolean {
   const idx = arr.findIndex(i => i.id === id)
   if (idx === -1) return false
   arr.splice(idx, 1)
+  scheduleBlobSave()
   return true
 }
