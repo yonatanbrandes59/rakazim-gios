@@ -103,16 +103,31 @@ export function ChatbotClient({ candidate, token }: Props) {
     setDone(true)
     setSubmitting(true)
     try {
-      await fetch(`/api/questionnaire/${token}/submit`, {
+      // Transform answers from object to array format expected by the API
+      const answersArray = QUESTIONS
+        .filter(q => finalAnswers[q.key] !== undefined && finalAnswers[q.key] !== '')
+        .map(q => {
+          const val = finalAnswers[q.key]
+          return {
+            question_key: q.key,
+            question_text: q.questionText,
+            answer: Array.isArray(val) ? val.join(', ') : String(val || ''),
+          }
+        })
+
+      const res = await fetch(`/api/questionnaire/${token}/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers: finalAnswers }),
+        body: JSON.stringify({ answers: answersArray, consent: true }),
       })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'שגיאה בשמירה')
       setTimeout(() => {
         addBotMsg(`✅ סיימנו!\n\nהתשובות שלך נשמרו. אחד מהרכזים/ות האזוריים שלנו יצור איתך קשר בקרוב 💙\n\nתודה שהיית שותף/ה לתהליך הזה! 🌟`)
       }, 1000)
-    } catch {
-      addBotMsg('אופס, הייתה תקלה קטנה. אנא שלח/י לנו הודעה ישירה. 🙏')
+    } catch (err: any) {
+      setDone(false)
+      addBotMsg(`אופס, הייתה תקלה: ${err.message || 'שגיאה לא ידועה'}. אנא שלח/י לנו הודעה ישירה. 🙏`)
     } finally {
       setSubmitting(false)
     }
