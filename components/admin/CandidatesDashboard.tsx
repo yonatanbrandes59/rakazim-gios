@@ -66,7 +66,7 @@ export function CandidatesDashboard({ initialCandidates, coordinators, stats }: 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'send_opening', candidate_ids: Array.from(selectedIds) }),
       })
-      alert(`הועבר לעיבוד: ${selectedIds.size} הודעות (מצב mock – לחצי "פתח בוואטסאפ" בדשבורד ההודעות)`)
+      alert(`✅ הועבר בהצלחה: ${selectedIds.size} הודעות. לחץ "פתח בוואטסאפ" בדשבורד ההודעות לשליחה.`)
       setSelectedIds(new Set())
     } finally {
       setSending(false)
@@ -216,7 +216,7 @@ export function CandidatesDashboard({ initialCandidates, coordinators, stats }: 
                     </td>
                     <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                       <a
-                        href={createWhatsAppLink(c.phone, `היי ${c.first_name}!`)}
+                        href={createWhatsAppLink(c.phone, `היי ${c.first_name}! 👋\n\nפונה אליך כי היית בעבר בגרעין, ועכשיו כשאתה לקראת שחרור / אחרי שחרור מהצבא, אנחנו בודקים התאמות לתפקידי רכז/ת נוער / רכז/ת סניף.\n\nשאלון קצר ולא מחייב:\n${window.location.origin}/questionnaire/${c.candidate_token}\n\nאם זה לא רלוונטי, אפשר להשיב "לא מעוניין" 🙏`)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-green-600 hover:text-green-700 text-lg"

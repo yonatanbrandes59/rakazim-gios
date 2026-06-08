@@ -1,8 +1,14 @@
 import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
+import bcrypt from 'bcryptjs'
 import { AuthUser } from './types'
 import { getStore } from './store'
+
+// In production, JWT_SECRET must be explicitly set — no insecure fallback allowed.
+if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+  throw new Error('[auth] JWT_SECRET env var must be set in production. Set it in your Vercel dashboard or .env.local.')
+}
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'demo-jwt-secret-merakzim-2024'
@@ -66,19 +72,40 @@ export function isCoordinator(user: AuthUser | null): user is Extract<AuthUser, 
 }
 
 // Verify admin credentials
+// IMPORTANT: ADMIN_PASSWORD must be a strong secret (min 12 chars) in production.
+// A weak or default password will be rejected.
 export function verifyAdminCredentials(email: string, password: string): boolean {
+  // In production, ADMIN_EMAIL and ADMIN_PASSWORD must be explicitly configured.
+  if (process.env.NODE_ENV === 'production') {
+    if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
+      throw new Error('[auth] ADMIN_EMAIL and ADMIN_PASSWORD env vars must be set in production.')
+    }
+  }
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@demo.com'
   const adminPassword = process.env.ADMIN_PASSWORD || 'Admin@123'
+  const minLength = 8
+  if (adminPassword.length < minLength) {
+    console.error('[auth] ADMIN_PASSWORD is too short — must be at least 8 characters')
+    return false
+  }
   return email === adminEmail && password === adminPassword
 }
 
+// Hash a plain-text password for storage
+export async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 12)
+}
+
 // Verify coordinator credentials (stored in the in-memory store or Supabase)
-export function verifyCoordinatorCredentials(email: string, password: string) {
+// password_hash === 'demo' is accepted only in demo/dev mode (USE_SUPABASE=false).
+export async function verifyCoordinatorCredentials(email: string, password: string) {
   const store = getStore()
-  const coord = store.regional_coordinators.find(
-    c => c.email === email && (c.password_hash === password || c.password_hash === 'demo')
-  )
-  return coord ?? null
+  const coord = store.regional_coordinators.find(c => c.email === email)
+  if (!coord || !coord.password_hash) return null
+  // Legacy demo sentinel — only valid in demo mode (no real Supabase configured)
+  if (coord.password_hash === 'demo') return coord
+  const match = await bcrypt.compare(password, coord.password_hash)
+  return match ? coord : null
 }
 
 // Middleware helper

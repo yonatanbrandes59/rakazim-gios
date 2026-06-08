@@ -4,7 +4,11 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'רכזים בדרך – מאתרים את דור רכזי הנוער הבא',
   description: 'מערכת גיוס חכמה לרכזי נוער – בוגרי גרעינים לקראת שחרור ולאחריו',
-  icons: { icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🌟</text></svg>' },
+  icons: {
+    icon: '/logo.png',
+    apple: '/logo.png',
+    shortcut: '/logo.png',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

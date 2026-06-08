@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAdmin } from '@/lib/auth'
+import { requireAdmin, hashPassword } from '@/lib/auth'
 import { coordinatorsDb } from '@/lib/db'
 
 export async function GET(req: NextRequest) {
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
 
   const coordinator = await coordinatorsDb.create({
     name, region, phone, email,
-    password_hash: password || 'demo',  // In production: hash the password
+    password_hash: password ? await hashPassword(password) : 'demo',
     settlements: settlements || [],
     notes: notes || '',
   })

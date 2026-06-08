@@ -1,6 +1,6 @@
 'use client'
-import { useState } from 'react'
-import { Candidate, RegionalCoordinator, CANDIDATE_STATUS_LABELS, INTEREST_LEVEL_LABELS, REGION_LABELS } from '@/lib/types'
+import { useState, useEffect } from 'react'
+import { Candidate, RegionalCoordinator, ActivityLogItem, CANDIDATE_STATUS_LABELS, INTEREST_LEVEL_LABELS, REGION_LABELS } from '@/lib/types'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { Input, Select } from '@/components/ui/Input'
@@ -13,12 +13,43 @@ interface Props {
   onUpdate: (c: Candidate) => void
 }
 
+const USER_TYPE_LABELS: Record<ActivityLogItem['user_type'], string> = {
+  admin: 'מנהל',
+  coordinator: 'רכזת',
+  candidate: 'מועמד/ת',
+  system: 'מערכת',
+}
+
+const USER_TYPE_COLORS: Record<ActivityLogItem['user_type'], string> = {
+  admin: 'bg-purple-100 text-purple-700',
+  coordinator: 'bg-brand-100 text-brand-700',
+  candidate: 'bg-green-100 text-green-700',
+  system: 'bg-gray-100 text-gray-600',
+}
+
 export function CandidateDetailModal({ candidate, coordinators, onClose, onUpdate }: Props) {
   const [tab, setTab] = useState<'info' | 'notes' | 'history'>('info')
   const [notes, setNotes] = useState(candidate.notes || '')
   const [status, setStatus] = useState(candidate.status)
   const [assignedCoord, setAssignedCoord] = useState(candidate.assigned_coordinator_id || '')
   const [saving, setSaving] = useState(false)
+  const [activity, setActivity] = useState<ActivityLogItem[]>([])
+  const [activityLoading, setActivityLoading] = useState(false)
+  const [activityLoaded, setActivityLoaded] = useState(false)
+
+  useEffect(() => {
+    if (tab === 'history' && !activityLoaded) {
+      setActivityLoading(true)
+      fetch(`/api/candidates/${candidate.id}`)
+        .then(r => r.json())
+        .then(data => {
+          setActivity(Array.isArray(data.activity) ? data.activity : [])
+          setActivityLoaded(true)
+        })
+        .catch(() => setActivity([]))
+        .finally(() => setActivityLoading(false))
+    }
+  }, [tab, activityLoaded, candidate.id])
 
   async function handleSave() {
     setSaving(true)
@@ -37,7 +68,22 @@ export function CandidateDetailModal({ candidate, coordinators, onClose, onUpdat
     }
   }
 
-  const wa = createWhatsAppLink(candidate.phone, `היי ${candidate.first_name}! 👋`)
+  const APP_URL = typeof window !== 'undefined' ? window.location.origin : ''
+  const questionnaireLink = `${APP_URL}/questionnaire/${candidate.candidate_token}`
+  const waMessage = `היי ${candidate.first_name}! 👋
+
+פונה אליך כי היית בעבר בגרעין, ועכשיו כשאתה לקראת שחרור / אחרי שחרור מהצבא, אנחנו בודקים התאמות לתפקידי רכז/ת נוער / רכז/ת סניף.
+
+זה שאלון קצר ולא מחייב שיעזור לנו להבין:
+• אם זה מעניין אותך
+• מתי נכון לדבר איתך
+• איזה אזור בארץ רלוונטי לך
+
+לשאלון:
+${questionnaireLink}
+
+אם זה לא רלוונטי, אפשר להשיב "לא מעוניין" 🙏`
+  const wa = createWhatsAppLink(candidate.phone, waMessage)
 
   return (
     <Modal isOpen onClose={onClose} title={candidate.full_name} size="lg">
@@ -128,12 +174,42 @@ export function CandidateDetailModal({ candidate, coordinators, onClose, onUpdat
       )}
 
       {tab === 'history' && (
-        <div className="text-sm text-gray-500 text-center py-8">
-          <div className="text-3xl mb-2">📋</div>
-          <p>היסטוריית פעולות תופיע כאן</p>
-          <p className="text-xs mt-1">נרשם: {formatDateTime(candidate.created_at)}</p>
-          {candidate.questionnaire_started_at && <p className="text-xs">התחיל שאלון: {formatDateTime(candidate.questionnaire_started_at)}</p>}
-          {candidate.questionnaire_completed_at && <p className="text-xs">סיים שאלון: {formatDateTime(candidate.questionnaire_completed_at)}</p>}
+        <div className="min-h-[12rem]">
+          {activityLoading && (
+            <div className="text-sm text-gray-400 text-center py-8">
+              <div className="text-2xl mb-2">⏳</div>
+              <p>טוען היסטוריה...</p>
+            </div>
+          )}
+          {!activityLoading && activity.length === 0 && (
+            <div className="text-sm text-gray-500 text-center py-8">
+              <div className="text-3xl mb-2">📋</div>
+              <p>אין פעולות רשומות עדיין</p>
+            </div>
+          )}
+          {!activityLoading && activity.length > 0 && (
+            <ol className="relative border-r border-gray-200 space-y-4 pr-5 py-1">
+              {activity.map(item => (
+                <li key={item.id} className="relative">
+                  <span className="absolute -right-[1.1rem] top-1 w-3.5 h-3.5 rounded-full bg-brand-400 border-2 border-white block" />
+                  <div className="flex items-start gap-2 flex-wrap">
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${USER_TYPE_COLORS[item.user_type]}`}>
+                      {USER_TYPE_LABELS[item.user_type]}
+                    </span>
+                    <span className="text-sm text-gray-800 font-medium flex-1">{item.action}</span>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-0.5">{formatDateTime(item.created_at)}</p>
+                  {item.details && Object.keys(item.details).length > 0 && (
+                    <p className="text-xs text-gray-500 mt-0.5 break-words">
+                      {Object.entries(item.details)
+                        .map(([k, v]) => `${k}: ${v}`)
+                        .join(' | ')}
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ol>
+          )}
         </div>
       )}
 

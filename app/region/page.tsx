@@ -8,17 +8,22 @@ export default async function RegionPage() {
   if (!user) redirect('/region/login')
   if (user.role === 'admin') redirect('/admin')
 
-  const [allCandidates, coordinator, positions] = await Promise.all([
-    candidatesDb.findAll(),
+  const [scopedCandidates, coordinator, positions] = await Promise.all([
+    // Scope at DB level — only fetch this coordinator's candidates, never all candidates
+    candidatesDb.findAll({ coordinator_id: user.id }),
     coordinatorsDb.findById(user.id),
     positionsDb.findAll(),
   ])
 
-  // Filter candidates to this coordinator's region
-  const myCandidates = allCandidates.filter(c =>
-    c.preferred_region === (user as any).region ||
-    c.assigned_region_id === (user as any).region ||
-    c.assigned_coordinator_id === (user as any).id
+  // Secondary server-side guard: confirm each returned candidate actually belongs
+  // to this coordinator (defends against a DB layer that ignores the filter)
+  const coordinatorRegion = (user as any).region as string | undefined
+  const myCandidates = scopedCandidates.filter(c =>
+    c.assigned_coordinator_id === user.id ||
+    (coordinatorRegion && (
+      c.preferred_region === coordinatorRegion ||
+      c.assigned_region_id === coordinatorRegion
+    ))
   )
 
   const myPositions = positions.filter(p => p.region === (user as any).region)

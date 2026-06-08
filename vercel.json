@@ -2,7 +2,13 @@
   "crons": [
     {
       "path": "/api/cron/process-messages",
-      "schedule": "0 8 * * *"
+      "schedule": "0 8 * * *",
+      "method": "POST"
+    },
+    {
+      "path": "/api/cron/purge-old-answers",
+      "schedule": "0 3 1 * *",
+      "method": "POST"
     }
   ]
 }

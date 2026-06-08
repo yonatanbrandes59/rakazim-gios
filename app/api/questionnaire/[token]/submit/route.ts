@@ -8,6 +8,9 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
   const candidate = await candidatesDb.findByToken(params.token)
   if (!candidate) return NextResponse.json({ error: 'קישור לא תקין' }, { status: 404 })
   if (candidate.opt_out) return NextResponse.json({ error: 'הוסרת מהרשימה' }, { status: 410 })
+  if (candidate.questionnaire_completed_at) {
+    return NextResponse.json({ error: 'השאלון כבר הוגש' }, { status: 409 })
+  }
 
   const body = await req.json()
   const { answers, consent, opt_out } = body as {

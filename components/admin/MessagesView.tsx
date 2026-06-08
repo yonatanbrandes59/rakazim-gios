@@ -14,7 +14,7 @@ const STATUS_LABELS: Record<MessageStatus, string> = {
   sent: 'נשלח',
   failed: 'נכשל',
   cancelled: 'בוטל',
-  mock_sent: 'Mock ✓',
+  mock_sent: 'נשלח ✓',
   blocked_paid_provider: 'חסום (בתשלום)',
   ready_for_manual_whatsapp: 'ממתין לשליחה ידנית',
 }
@@ -118,8 +118,8 @@ export function MessagesView({ initialMessages, candidateMap }: Props) {
       {/* Blocked */}
       {blocked.length > 0 && (
         <Section title="🚫 חסומים (שירות בתשלום)" count={blocked.length}>
-          <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-xs text-red-700 mb-3">
-            FREE_MODE=true חוסם שירותי הודעות בתשלום. הפעל את FREE_MODE=false + ספק API key כדי לשלוח אוטומטית.
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700 mb-3">
+            ההודעות ממתינות לשליחה ידנית דרך WhatsApp. לחץ "פתח" לשליחה.
           </div>
           {blocked.map(m => <MessageRow key={m.id} m={m} candidateMap={candidateMap} copied={copied} onCopy={copyText} showWA />)}
         </Section>
@@ -176,7 +176,7 @@ function MessageRow({
             </>
           )}
         </div>
-        <p className="text-gray-700 text-xs truncate max-w-xl">{m.message_body}</p>
+        <p className="text-gray-700 text-xs whitespace-pre-wrap max-w-xl line-clamp-4">{m.message_body}</p>
         <p className="text-gray-400 text-xs mt-0.5">{formatDateTime(m.created_at)}</p>
       </div>
       <div className="flex gap-1 shrink-0">

@@ -2,23 +2,25 @@
 
 export type Region =
   | 'north'
-  | 'haifa_valleys'
-  | 'sharon'
+  | 'afek_hayam'
+  | 'afek_maayan'
+  | 'center_north'
   | 'center'
-  | 'jerusalem'
-  | 'south'
-  | 'otef_negev'
-  | 'open'
+  | 'hevel_modiin'
+  | 'shfela_tamar'
+  | 'merhavim'
+  | 'eshkol'
 
 export const REGION_LABELS: Record<Region, string> = {
   north:          'צפון',
-  haifa_valleys:  'חיפה והעמקים',
-  sharon:         'שרון',
+  afek_hayam:     'עמק חפר ים',
+  afek_maayan:    'עמק חפר מעיין',
+  center_north:   'מרכז צפוני',
   center:         'מרכז',
-  jerusalem:      'ירושלים והסביבה',
-  south:          'דרום',
-  otef_negev:     'עוטף / נגב מערבי',
-  open:           'פתוח להצעות',
+  hevel_modiin:   'חבל מודיעין',
+  shfela_tamar:   'שפלה תמר',
+  merhavim:       'מרחבים',
+  eshkol:         'אשכול',
 }
 
 export const REGIONS = Object.keys(REGION_LABELS) as Region[]

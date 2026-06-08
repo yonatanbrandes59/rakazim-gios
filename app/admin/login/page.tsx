@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 
@@ -36,7 +37,9 @@ export default function AdminLogin() {
     <div className="min-h-screen bg-gradient-to-br from-brand-800 via-brand-700 to-blue-600 flex items-center justify-center px-4">
       <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="text-5xl mb-3">🌟</div>
+          <div className="flex justify-center mb-3">
+            <Image src="/logo.png" alt="האחוד החקלאי" width={72} height={72} className="rounded-xl" />
+          </div>
           <h1 className="text-2xl font-black text-brand-800">רכזים בדרך</h1>
           <p className="text-gray-500 text-sm mt-1">כניסת מנהל / רכז/ת אזורי</p>
         </div>
@@ -46,7 +49,7 @@ export default function AdminLogin() {
             type="email"
             value={email}
             onChange={e => setEmail(e.target.value)}
-            placeholder="admin@demo.com"
+            placeholder="your@email.com"
             ltr
             required
           />
@@ -64,11 +67,6 @@ export default function AdminLogin() {
             כניסה
           </Button>
         </form>
-        <div className="mt-6 p-4 bg-gray-50 rounded-xl text-xs text-gray-500">
-          <p className="font-semibold text-gray-700 mb-1">🎮 Demo Mode</p>
-          <p>מנהל: admin@demo.com / Admin@123</p>
-          <p>רכזת: michal@demo.com / demo</p>
-        </div>
       </div>
     </div>
   )

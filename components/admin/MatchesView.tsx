@@ -104,7 +104,7 @@ export function MatchesView({ candidates, positions, coordinators }: Props) {
                         </div>
                       </div>
                       <div className="flex gap-2 mt-3">
-                        <a href={createWhatsAppLink(c.phone, `היי ${c.first_name}!`)} target="_blank" rel="noopener noreferrer">
+                        <a href={createWhatsAppLink(c.phone, `היי ${c.first_name}! 👋\n\nפונה אליך כי היית בעבר בגרעין, ועכשיו כשאתה לקראת שחרור / אחרי שחרור מהצבא, אנחנו בודקים התאמות לתפקידי רכז/ת נוער / רכז/ת סניף.\n\nשאלון קצר ולא מחייב:\n${typeof window !== 'undefined' ? window.location.origin : ''}/questionnaire/${c.candidate_token}\n\nאם זה לא רלוונטי, אפשר להשיב "לא מעוניין" 🙏`)} target="_blank" rel="noopener noreferrer">
                           <Button variant="whatsapp" size="sm">💬 וואטסאפ</Button>
                         </a>
                         <Button size="sm" variant="secondary" onClick={() => acceptMatch(c, selectedPos)}>✅ שבץ</Button>

@@ -137,7 +137,7 @@ export function calculateFitScore(input: ScoringInput): {
 
 // Assign a candidate to the matching regional coordinator
 export async function assignCoordinator(candidate: Candidate): Promise<string | null> {
-  if (!candidate.preferred_region || candidate.preferred_region === 'open') {
+  if (!candidate.preferred_region) {
     return null
   }
   const coordinators = await coordinatorsDb.findAll()

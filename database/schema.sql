@@ -63,7 +63,7 @@ create table if not exists candidates (
   recommended_contact_date    date,
 
   -- Management fields
-  assigned_region_id          text references regional_coordinators(region) on update cascade,
+  assigned_region_id          text,
   assigned_coordinator_id     uuid references regional_coordinators(id) on delete set null,
   status                      text not null default 'new',
   opt_out                     boolean not null default false,
