@@ -15,7 +15,7 @@ import {
 } from './types'
 import {
   getStore, storeGet, storeFind, storeCreate,
-  storeUpdate, storeDelete, initStoreFromBlob
+  storeUpdate, storeDelete, initStoreFromBlob, persistStoreToBlob
 } from './store'
 import { generateToken } from './utils'
 
@@ -105,7 +105,9 @@ export const candidatesDb = {
       if (error) throw error
       return data
     }
-    return storeCreate<Candidate>('candidates', newCand)
+    const result = storeCreate<Candidate>('candidates', newCand)
+    await persistStoreToBlob()
+    return result
   },
 
   async update(id: string, dto: UpdateCandidateDto): Promise<Candidate | null> {
@@ -114,7 +116,9 @@ export const candidatesDb = {
       const { data } = await supabase.from('candidates').update({ ...dto, updated_at: new Date().toISOString() }).eq('id', id).select().single()
       return data
     }
-    return storeUpdate<Candidate>('candidates', id, dto)
+    const result = storeUpdate<Candidate>('candidates', id, dto)
+    await persistStoreToBlob()
+    return result
   },
 
   async delete(id: string): Promise<void> {
@@ -124,6 +128,7 @@ export const candidatesDb = {
       return
     }
     storeDelete('candidates', id)
+    await persistStoreToBlob()
   },
 }
 
@@ -165,7 +170,9 @@ export const coordinatorsDb = {
       if (error) throw error
       return row
     }
-    return storeCreate<RegionalCoordinator>('regional_coordinators', data)
+    const result = storeCreate<RegionalCoordinator>('regional_coordinators', data)
+    await persistStoreToBlob()
+    return result
   },
 
   async update(id: string, data: Partial<RegionalCoordinator>): Promise<RegionalCoordinator | null> {
@@ -174,7 +181,9 @@ export const coordinatorsDb = {
       const { data: row } = await supabase.from('regional_coordinators').update({ ...data, updated_at: new Date().toISOString() }).eq('id', id).select().single()
       return row
     }
-    return storeUpdate<RegionalCoordinator>('regional_coordinators', id, data)
+    const result = storeUpdate<RegionalCoordinator>('regional_coordinators', id, data)
+    await persistStoreToBlob()
+    return result
   },
 
   async delete(id: string): Promise<void> {
@@ -184,6 +193,7 @@ export const coordinatorsDb = {
       return
     }
     storeDelete('regional_coordinators', id)
+    await persistStoreToBlob()
   },
 }
 
@@ -211,7 +221,9 @@ export const positionsDb = {
       if (error) throw error
       return row
     }
-    return storeCreate<OpenPosition>('open_positions', data)
+    const result = storeCreate<OpenPosition>('open_positions', data)
+    await persistStoreToBlob()
+    return result
   },
 
   async update(id: string, data: Partial<OpenPosition>): Promise<OpenPosition | null> {
@@ -220,7 +232,9 @@ export const positionsDb = {
       const { data: row } = await supabase.from('open_positions').update({ ...data, updated_at: new Date().toISOString() }).eq('id', id).select().single()
       return row
     }
-    return storeUpdate<OpenPosition>('open_positions', id, data)
+    const result = storeUpdate<OpenPosition>('open_positions', id, data)
+    await persistStoreToBlob()
+    return result
   },
 
   async delete(id: string): Promise<void> {
@@ -230,6 +244,7 @@ export const positionsDb = {
       return
     }
     storeDelete('open_positions', id)
+    await persistStoreToBlob()
   },
 }
 
@@ -259,7 +274,9 @@ export const messagesDb = {
       if (error) throw error
       return row
     }
-    return storeCreate<MessageQueueItem>('message_queue', data)
+    const result = storeCreate<MessageQueueItem>('message_queue', data)
+    await persistStoreToBlob()
+    return result
   },
 
   async update(id: string, data: Partial<MessageQueueItem>): Promise<MessageQueueItem | null> {
@@ -268,7 +285,9 @@ export const messagesDb = {
       const { data: row } = await supabase.from('message_queue').update({ ...data, updated_at: new Date().toISOString() }).eq('id', id).select().single()
       return row
     }
-    return storeUpdate<MessageQueueItem>('message_queue', id, data)
+    const result = storeUpdate<MessageQueueItem>('message_queue', id, data)
+    await persistStoreToBlob()
+    return result
   },
 }
 
@@ -293,11 +312,14 @@ export const templatesDb = {
   },
 
   async update(id: string, data: Partial<MessageTemplate>): Promise<MessageTemplate | null> {
+    await ensureBlob()
     if (USE_SUPABASE && supabase) {
       const { data: row } = await supabase.from('message_templates').update({ ...data, updated_at: new Date().toISOString() }).eq('id', id).select().single()
       return row
     }
-    return storeUpdate<MessageTemplate>('message_templates', id, data)
+    const result = storeUpdate<MessageTemplate>('message_templates', id, data)
+    await persistStoreToBlob()
+    return result
   },
 }
 
@@ -314,6 +336,7 @@ export const answersDb = {
   },
 
   async createMany(answers: Omit<QuestionnaireAnswer, 'id' | 'created_at'>[]): Promise<void> {
+    await ensureBlob()
     const now = new Date().toISOString()
     if (USE_SUPABASE && supabase) {
       const rows = answers.map(a => ({ ...a, id: uuidv4(), created_at: now }))
@@ -324,6 +347,7 @@ export const answersDb = {
     answers.forEach(a => {
       store.questionnaire_answers.push({ ...a, id: uuidv4(), created_at: now })
     })
+    await persistStoreToBlob()
   },
 }
 
@@ -338,6 +362,7 @@ export const activityDb = {
       return
     }
     getStore().activity_log.push({ ...entry, id: uuidv4(), created_at: now })
+    await persistStoreToBlob()
   },
 
   async findByCandidateId(candidateId: string): Promise<ActivityLogItem[]> {

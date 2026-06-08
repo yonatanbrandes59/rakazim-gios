@@ -295,11 +295,10 @@ export async function initStoreFromBlob(): Promise<void> {
   void persistStoreToBlob()
 }
 
-/** Save current store to Vercel Blob (debounced, fire-and-forget) */
+/** Schedule a blob save (no-op — use persistStoreToBlob() directly in async contexts) */
 export function scheduleBlobSave(): void {
-  if (!USE_BLOB) return
-  if (_blobSaveTimer) clearTimeout(_blobSaveTimer)
-  _blobSaveTimer = setTimeout(() => { void persistStoreToBlob() }, 500)
+  // In serverless environments setTimeout doesn't outlive the HTTP response.
+  // Callers should use persistStoreToBlob() with await instead.
 }
 
 export async function persistStoreToBlob(): Promise<void> {
