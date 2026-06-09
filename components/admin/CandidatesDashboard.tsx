@@ -175,7 +175,7 @@ export function CandidatesDashboard({ initialCandidates, coordinators, stats }: 
                   </th>
                   <th className="px-4 py-3 text-right">שם</th>
                   <th className="px-4 py-3 text-right">טלפון</th>
-                  <th className="px-4 py-3 text-right">גרעין</th>
+                  <th className="px-4 py-3 text-right">מספר גרעין</th>
                   <th className="px-4 py-3 text-right">שחרור</th>
                   <th className="px-4 py-3 text-right">אזור</th>
                   <th className="px-4 py-3 text-right">עניין</th>

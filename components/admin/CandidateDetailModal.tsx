@@ -119,7 +119,7 @@ ${questionnaireLink}
           <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
             <InfoRow label="טלפון" value={<a href={`tel:${candidate.phone}`} className="text-brand-700 hover:underline">{candidate.phone}</a>} />
             <InfoRow label="אימייל" value={candidate.email || '—'} />
-            <InfoRow label="גרעין" value={candidate.garin || '—'} />
+            <InfoRow label="מספר גרעין" value={candidate.garin || '—'} />
             <InfoRow label="שנת גרעין" value={candidate.garin_year || '—'} />
             <InfoRow label="תפקיד בצבא" value={candidate.army_role || '—'} />
             <InfoRow label="שחרור" value={formatDate(candidate.release_date)} />

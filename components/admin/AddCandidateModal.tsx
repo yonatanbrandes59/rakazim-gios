@@ -66,7 +66,7 @@ export function AddCandidateModal({ coordinators, onClose, onCreated }: Props) {
           <Input label="אימייל" type="email" value={form.email} onChange={e => set('email', e.target.value)} ltr />
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <Input label="גרעין" value={form.garin} onChange={e => set('garin', e.target.value)} placeholder="שם הגרעין" />
+          <Input label="מספר גרעין" value={form.garin} onChange={e => set('garin', e.target.value)} placeholder="מס' הגרעין" />
           <Input label="שנת גרעין" value={form.garin_year} onChange={e => set('garin_year', e.target.value)} placeholder="2022" />
         </div>
         <div className="grid grid-cols-2 gap-3">
