@@ -33,5 +33,11 @@ VALUES
   ('מנהל/ת מרחב מרכז',         'center_manager', 'manager',     '050-0000011', 'manager-center@merakzim.local', '$2b$12$oqjMpvN/d.6YUn.9F/3R3u/fldb/WSDQXlrYh.fie71olsoVLWvLW', '{}', ''),
   ('מנהל/ת מרחב דרום',         'south_manager',  'manager',     '050-0000012', 'manager-south@merakzim.local',  '$2b$12$oqjMpvN/d.6YUn.9F/3R3u/fldb/WSDQXlrYh.fie71olsoVLWvLW', '{}', ''),
   -- ── מזכ"ל ──────────────────────────────────────────────────
-  ('מזכ"ל התנועה',             'national',       'secretary',   '050-0000013', 'secretary@merakzim.local',      '$2b$12$oqjMpvN/d.6YUn.9F/3R3u/fldb/WSDQXlrYh.fie71olsoVLWvLW', '{}', '')
+  ('מזכ"ל התנועה',             'national',       'secretary',        '050-0000013', 'secretary@merakzim.local',        '$2b$12$oqjMpvN/d.6YUn.9F/3R3u/fldb/WSDQXlrYh.fie71olsoVLWvLW', '{}', ''),
+  -- ── ראשי מחלקות ────────────────────────────────────────────
+  ('רכז/ת גרעין',              'national',       'garin_coordinator', '050-0000014', 'garin@merakzim.local',            '$2b$12$oqjMpvN/d.6YUn.9F/3R3u/fldb/WSDQXlrYh.fie71olsoVLWvLW', '{}', ''),
+  ('מנהל/ת מחלקת חינוך',       'national',       'education_dept',    '050-0000015', 'education@merakzim.local',        '$2b$12$oqjMpvN/d.6YUn.9F/3R3u/fldb/WSDQXlrYh.fie71olsoVLWvLW', '{}', ''),
+  ('מנהל/ת מחלקת מפעלים',      'national',       'factories_dept',    '050-0000016', 'factories@merakzim.local',        '$2b$12$oqjMpvN/d.6YUn.9F/3R3u/fldb/WSDQXlrYh.fie71olsoVLWvLW', '{}', ''),
+  ('מנהל/ת מחלקת תפעול',       'national',       'operations_dept',   '050-0000017', 'operations@merakzim.local',       '$2b$12$oqjMpvN/d.6YUn.9F/3R3u/fldb/WSDQXlrYh.fie71olsoVLWvLW', '{}', ''),
+  ('מנהל/ת מחלקת סניפים',      'national',       'branches_dept',     '050-0000018', 'branches@merakzim.local',         '$2b$12$oqjMpvN/d.6YUn.9F/3R3u/fldb/WSDQXlrYh.fie71olsoVLWvLW', '{}', '')
 ON CONFLICT (email) DO NOTHING;

@@ -21,15 +21,25 @@ const ALL_COORD_REGIONS: { value: CoordinatorRegion; label: string }[] = [
 ]
 
 const ROLE_OPTIONS: { value: CoordinatorRole; label: string }[] = [
-  { value: 'coordinator', label: 'רכז/ת אזורי/ת' },
-  { value: 'manager',     label: 'מנהל/ת מרחב' },
-  { value: 'secretary',   label: 'מזכ"ל' },
+  { value: 'coordinator',       label: 'רכז/ת אזורי/ת' },
+  { value: 'garin_coordinator', label: 'רכז/ת גרעין' },
+  { value: 'manager',           label: 'מנהל/ת מרחב' },
+  { value: 'secretary',         label: 'מזכ"ל' },
+  { value: 'education_dept',    label: 'מנהל/ת מחלקת חינוך' },
+  { value: 'factories_dept',    label: 'מנהל/ת מחלקת מפעלים' },
+  { value: 'operations_dept',   label: 'מנהל/ת מחלקת תפעול' },
+  { value: 'branches_dept',     label: 'מנהל/ת מחלקת סניפים' },
 ]
 
 const ROLE_BADGE: Record<CoordinatorRole, string> = {
-  coordinator: 'bg-brand-100 text-brand-700',
-  manager:     'bg-purple-100 text-purple-700',
-  secretary:   'bg-yellow-100 text-yellow-700',
+  coordinator:       'bg-brand-100 text-brand-700',
+  garin_coordinator: 'bg-teal-100 text-teal-700',
+  manager:           'bg-purple-100 text-purple-700',
+  secretary:         'bg-yellow-100 text-yellow-700',
+  education_dept:    'bg-blue-100 text-blue-700',
+  factories_dept:    'bg-orange-100 text-orange-700',
+  operations_dept:   'bg-gray-100 text-gray-700',
+  branches_dept:     'bg-pink-100 text-pink-700',
 }
 
 const emptyForm = { name: '', email: '', phone: '', region: '', role: 'coordinator' as CoordinatorRole, password: '', settlements: '' }

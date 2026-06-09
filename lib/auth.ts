@@ -79,9 +79,10 @@ export function isSecretary(user: AuthUser | null): user is Extract<AuthUser, { 
   return user?.role === 'secretary'
 }
 
-/** Returns true for any user with admin-level access (admin + manager + secretary) */
+/** Returns true for any user with admin-level access (admin + manager + secretary + dept heads) */
 export function hasAdminAccess(user: AuthUser | null): boolean {
-  return user?.role === 'admin' || user?.role === 'manager' || user?.role === 'secretary'
+  if (!user) return false
+  return ['admin', 'manager', 'secretary', 'education_dept', 'factories_dept', 'operations_dept', 'branches_dept'].includes(user.role)
 }
 
 // Verify admin credentials

@@ -27,7 +27,15 @@ export const REGIONS = Object.keys(REGION_LABELS) as Region[]
 
 // ── Coordinator roles & extended regions ──────────────────────────────────────
 
-export type CoordinatorRole = 'coordinator' | 'manager' | 'secretary'
+export type CoordinatorRole =
+  | 'coordinator'
+  | 'garin_coordinator'
+  | 'manager'
+  | 'secretary'
+  | 'education_dept'
+  | 'factories_dept'
+  | 'operations_dept'
+  | 'branches_dept'
 
 /** Regions for coordinators — includes real regions + manager merahav + national */
 export type CoordinatorRegion =
@@ -46,9 +54,14 @@ export const COORDINATOR_REGION_LABELS: Record<CoordinatorRegion, string> = {
 }
 
 export const COORDINATOR_ROLE_LABELS: Record<CoordinatorRole, string> = {
-  coordinator: 'רכז/ת אזורי/ת',
-  manager:     'מנהל/ת מרחב',
-  secretary:   'מזכ"ל',
+  coordinator:       'רכז/ת אזורי/ת',
+  garin_coordinator: 'רכז/ת גרעין',
+  manager:           'מנהל/ת מרחב',
+  secretary:         'מזכ"ל',
+  education_dept:    'מנהל/ת מחלקת חינוך',
+  factories_dept:    'מנהל/ת מחלקת מפעלים',
+  operations_dept:   'מנהל/ת מחלקת תפעול',
+  branches_dept:     'מנהל/ת מחלקת סניפים',
 }
 
 export type CandidateStatus =
