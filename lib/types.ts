@@ -25,6 +25,32 @@ export const REGION_LABELS: Record<Region, string> = {
 
 export const REGIONS = Object.keys(REGION_LABELS) as Region[]
 
+// ── Coordinator roles & extended regions ──────────────────────────────────────
+
+export type CoordinatorRole = 'coordinator' | 'manager' | 'secretary'
+
+/** Regions for coordinators — includes real regions + manager merahav + national */
+export type CoordinatorRegion =
+  | Region
+  | 'north_manager'
+  | 'center_manager'
+  | 'south_manager'
+  | 'national'
+
+export const COORDINATOR_REGION_LABELS: Record<CoordinatorRegion, string> = {
+  ...REGION_LABELS,
+  north_manager:  'מרחב צפון',
+  center_manager: 'מרחב מרכז',
+  south_manager:  'מרחב דרום',
+  national:       'ארצי',
+}
+
+export const COORDINATOR_ROLE_LABELS: Record<CoordinatorRole, string> = {
+  coordinator: 'רכז/ת אזורי/ת',
+  manager:     'מנהל/ת מרחב',
+  secretary:   'מזכ"ל',
+}
+
 export type CandidateStatus =
   | 'new'
   | 'questionnaire_sent'
@@ -166,7 +192,8 @@ export interface QuestionnaireAnswer {
 export interface RegionalCoordinator {
   id: string
   name: string
-  region: Region
+  region: CoordinatorRegion
+  role?: CoordinatorRole
   phone: string
   email: string
   password_hash?: string
@@ -278,11 +305,25 @@ export interface AdminUser {
 export interface CoordinatorUser {
   id: string
   name: string
-  region: Region
+  region: CoordinatorRegion
   role: 'coordinator'
 }
 
-export type AuthUser = AdminUser | CoordinatorUser
+export interface ManagerUser {
+  id: string
+  name: string
+  region: CoordinatorRegion
+  role: 'manager'
+}
+
+export interface SecretaryUser {
+  id: string
+  name: string
+  region: 'national'
+  role: 'secretary'
+}
+
+export type AuthUser = AdminUser | CoordinatorUser | ManagerUser | SecretaryUser
 
 // ── Chatbot ────────────────────────────────────────────────────────────────
 

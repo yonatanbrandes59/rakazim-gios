@@ -24,7 +24,7 @@ export default function AdminLogin() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      if (data.role === 'admin') router.push('/admin')
+      if (data.role === 'admin' || data.role === 'manager' || data.role === 'secretary') router.push('/admin')
       else if (data.role === 'coordinator') router.push('/region')
     } catch (err: any) {
       setError(err.message)

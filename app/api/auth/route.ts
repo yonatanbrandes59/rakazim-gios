@@ -64,12 +64,13 @@ export async function POST(req: NextRequest) {
     return res
   }
 
-  // Try coordinator
+  // Try coordinator / manager / secretary
   const coord = await verifyCoordinatorCredentials(email, password)
   if (coord) {
     resetRateLimit(ip)
-    const token = await signToken({ id: coord.id, name: coord.name, region: coord.region, role: 'coordinator' })
-    const res = NextResponse.json({ ok: true, role: 'coordinator', name: coord.name, region: coord.region })
+    const coordRole = (coord.role as 'coordinator' | 'manager' | 'secretary') || 'coordinator'
+    const token = await signToken({ id: coord.id, name: coord.name, region: coord.region as any, role: coordRole })
+    const res = NextResponse.json({ ok: true, role: coordRole, name: coord.name, region: coord.region })
     setAuthCookie(res, token)
     return res
   }

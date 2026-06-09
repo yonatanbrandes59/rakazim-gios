@@ -71,6 +71,19 @@ export function isCoordinator(user: AuthUser | null): user is Extract<AuthUser, 
   return user?.role === 'coordinator'
 }
 
+export function isManager(user: AuthUser | null): user is Extract<AuthUser, { role: 'manager' }> {
+  return user?.role === 'manager'
+}
+
+export function isSecretary(user: AuthUser | null): user is Extract<AuthUser, { role: 'secretary' }> {
+  return user?.role === 'secretary'
+}
+
+/** Returns true for any user with admin-level access (admin + manager + secretary) */
+export function hasAdminAccess(user: AuthUser | null): boolean {
+  return user?.role === 'admin' || user?.role === 'manager' || user?.role === 'secretary'
+}
+
 // Verify admin credentials
 // IMPORTANT: ADMIN_PASSWORD must be a strong secret (min 12 chars) in production.
 // A weak or default password will be rejected.
@@ -119,7 +132,7 @@ export async function requireAuth(req: NextRequest): Promise<AuthUser | NextResp
 
 export async function requireAdmin(req: NextRequest): Promise<AuthUser | NextResponse> {
   const user = await getAuthUserFromRequest(req)
-  if (!user || user.role !== 'admin') {
+  if (!user || !hasAdminAccess(user)) {
     return NextResponse.json({ error: 'אין הרשאת מנהל' }, { status: 403 })
   }
   return user

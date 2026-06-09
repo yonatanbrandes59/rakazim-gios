@@ -1,6 +1,9 @@
 'use client'
 import { useState } from 'react'
-import { RegionalCoordinator, REGION_LABELS, REGIONS } from '@/lib/types'
+import {
+  RegionalCoordinator, COORDINATOR_REGION_LABELS, REGIONS,
+  CoordinatorRole, COORDINATOR_ROLE_LABELS, CoordinatorRegion,
+} from '@/lib/types'
 import { Button } from '@/components/ui/Button'
 import { Input, Select } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
@@ -9,7 +12,27 @@ interface Props {
   initialCoordinators: RegionalCoordinator[]
 }
 
-const emptyForm = { name: '', email: '', phone: '', region: '', password: '', settlements: '' }
+const ALL_COORD_REGIONS: { value: CoordinatorRegion; label: string }[] = [
+  ...REGIONS.map(r => ({ value: r as CoordinatorRegion, label: COORDINATOR_REGION_LABELS[r] })),
+  { value: 'north_manager',  label: 'מרחב צפון' },
+  { value: 'center_manager', label: 'מרחב מרכז' },
+  { value: 'south_manager',  label: 'מרחב דרום' },
+  { value: 'national',       label: 'ארצי (מזכ"ל)' },
+]
+
+const ROLE_OPTIONS: { value: CoordinatorRole; label: string }[] = [
+  { value: 'coordinator', label: 'רכז/ת אזורי/ת' },
+  { value: 'manager',     label: 'מנהל/ת מרחב' },
+  { value: 'secretary',   label: 'מזכ"ל' },
+]
+
+const ROLE_BADGE: Record<CoordinatorRole, string> = {
+  coordinator: 'bg-brand-100 text-brand-700',
+  manager:     'bg-purple-100 text-purple-700',
+  secretary:   'bg-yellow-100 text-yellow-700',
+}
+
+const emptyForm = { name: '', email: '', phone: '', region: '', role: 'coordinator' as CoordinatorRole, password: '', settlements: '' }
 
 export function CoordinatorsView({ initialCoordinators }: Props) {
   const [coordinators, setCoordinators] = useState(initialCoordinators)
@@ -25,7 +48,8 @@ export function CoordinatorsView({ initialCoordinators }: Props) {
     setEditing(c)
     setForm({
       name: c.name, email: c.email, phone: c.phone,
-      region: c.region, password: '', settlements: (c.settlements || []).join(', ')
+      region: c.region, role: c.role || 'coordinator',
+      password: '', settlements: (c.settlements || []).join(', ')
     })
     setShowForm(true)
   }
@@ -43,6 +67,7 @@ export function CoordinatorsView({ initialCoordinators }: Props) {
     try {
       const body = {
         ...form,
+        role: form.role || 'coordinator',
         settlements: form.settlements.split(',').map(s => s.trim()).filter(Boolean),
       }
       if (editing) {
@@ -90,9 +115,14 @@ export function CoordinatorsView({ initialCoordinators }: Props) {
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="font-bold text-gray-900">{c.name}</h3>
-                <span className="text-xs bg-brand-100 text-brand-700 px-2 py-0.5 rounded-full mt-1 inline-block">
-                  {REGION_LABELS[c.region]}
-                </span>
+                <div className="flex gap-1 flex-wrap mt-1">
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${ROLE_BADGE[c.role || 'coordinator']}`}>
+                    {COORDINATOR_ROLE_LABELS[c.role || 'coordinator']}
+                  </span>
+                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                    {COORDINATOR_REGION_LABELS[c.region] ?? c.region}
+                  </span>
+                </div>
               </div>
               <div className="flex gap-1">
                 <Button variant="ghost" size="sm" onClick={() => startEdit(c)}>✏️</Button>
@@ -117,13 +147,21 @@ export function CoordinatorsView({ initialCoordinators }: Props) {
             <Input label="טלפון *" type="tel" value={form.phone} onChange={e => setField('phone', e.target.value)} ltr required />
           </div>
           <Input label="אימייל *" type="email" value={form.email} onChange={e => setField('email', e.target.value)} ltr required />
-          <Select
-            label="אזור *"
-            options={REGIONS.map(r => ({ value: r, label: REGION_LABELS[r] }))}
-            value={form.region}
-            onChange={e => setField('region', e.target.value)}
-            placeholder="בחרי אזור"
-          />
+          <div className="grid grid-cols-2 gap-3">
+            <Select
+              label="תפקיד *"
+              options={ROLE_OPTIONS}
+              value={form.role}
+              onChange={e => setField('role', e.target.value)}
+            />
+            <Select
+              label="אזור *"
+              options={ALL_COORD_REGIONS}
+              value={form.region}
+              onChange={e => setField('region', e.target.value)}
+              placeholder="בחרי אזור"
+            />
+          </div>
           <Input
             label="סיסמה (ריק = ללא שינוי)"
             type="password"
