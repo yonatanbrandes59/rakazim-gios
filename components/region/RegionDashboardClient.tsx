@@ -107,14 +107,6 @@ export function RegionDashboardClient({ user, candidates, positions }: Props) {
                   className="w-full text-right px-5 py-4 flex items-center gap-3 hover:bg-gray-50 transition-colors"
                   onClick={() => setExpanded(prev => prev === c.id ? null : c.id)}
                 >
-                  {/* Score circle */}
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-sm shrink-0 ${
-                    (c.fit_score || 0) >= 80 ? 'bg-green-100 text-green-700' :
-                    (c.fit_score || 0) >= 60 ? 'bg-yellow-100 text-yellow-700' :
-                    'bg-gray-100 text-gray-600'
-                  }`}>
-                    {c.fit_score ?? '—'}
-                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="font-bold text-gray-900">{c.full_name}</div>
                     <div className="text-xs text-gray-500">

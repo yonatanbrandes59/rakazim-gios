@@ -218,7 +218,6 @@ export function AIBrainDashboard() {
               <thead>
                 <tr className="bg-gray-50 text-right">
                   <th className="px-5 py-3 text-xs font-semibold text-gray-500">שם</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-gray-500">ציון התאמה</th>
                   <th className="px-4 py-3 text-xs font-semibold text-gray-500">עדיפות</th>
                   <th className="px-4 py-3 text-xs font-semibold text-gray-500">פעולה מומלצת</th>
                   <th className="px-4 py-3 text-xs font-semibold text-gray-500">דחיפות</th>
@@ -236,9 +235,6 @@ export function AIBrainDashboard() {
                       >
                         {candidate.full_name}
                       </button>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <span className="font-bold text-brand-700">{analysis.score ?? candidate.fit_score ?? '—'}</span>
                     </td>
                     <td className="px-4 py-3.5">
                       <PriorityBadge priority={analysis.priority} />

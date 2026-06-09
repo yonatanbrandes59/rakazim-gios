@@ -103,12 +103,8 @@ ${questionnaireLink}
 
       {tab === 'info' && (
         <div className="space-y-4">
-          {/* Score + interest row */}
+          {/* Interest + contact row */}
           <div className="flex gap-3">
-            <div className="flex-1 bg-brand-50 border border-brand-200 rounded-xl p-4 text-center">
-              <div className="text-3xl font-black text-brand-700">{candidate.fit_score ?? '—'}</div>
-              <div className="text-xs text-brand-600 mt-0.5">ציון התאמה</div>
-            </div>
             <div className="flex-1 bg-gray-50 border border-gray-200 rounded-xl p-4 text-center">
               <div className="text-sm font-bold text-gray-800">{candidate.interest_level ? INTEREST_LEVEL_LABELS[candidate.interest_level] : '—'}</div>
               <div className="text-xs text-gray-500 mt-0.5">רמת עניין</div>

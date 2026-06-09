@@ -179,7 +179,6 @@ export function CandidatesDashboard({ initialCandidates, coordinators, stats }: 
                   <th className="px-4 py-3 text-right">שחרור</th>
                   <th className="px-4 py-3 text-right">אזור</th>
                   <th className="px-4 py-3 text-right">עניין</th>
-                  <th className="px-4 py-3 text-right">ציון</th>
                   <th className="px-4 py-3 text-right">פנייה</th>
                   <th className="px-4 py-3 text-right">סטטוס</th>
                   <th className="px-4 py-3 text-right">פעולות</th>
@@ -207,7 +206,6 @@ export function CandidatesDashboard({ initialCandidates, coordinators, stats }: 
                         </span>
                       ) : '—'}
                     </td>
-                    <td className="px-4 py-3 font-black text-brand-700">{c.fit_score != null ? c.fit_score : '—'}</td>
                     <td className="px-4 py-3 text-gray-600 whitespace-nowrap text-xs">{formatDate(c.recommended_contact_date)}</td>
                     <td className="px-4 py-3">
                       <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${CANDIDATE_STATUS_COLORS[c.status]}`}>

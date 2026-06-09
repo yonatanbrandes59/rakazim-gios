@@ -42,7 +42,7 @@ export function MatchesView({ candidates, positions, coordinators }: Props) {
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-black text-gray-900">התאמות</h1>
-        <p className="text-gray-500 text-sm mt-0.5">בחרי תקן כדי לראות מועמדים מתאימים לפי ציון התאמה</p>
+        <p className="text-gray-500 text-sm mt-0.5">בחרי תקן כדי לראות מועמדים מתאימים לפי אזור ועדפות</p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
@@ -95,12 +95,6 @@ export function MatchesView({ candidates, positions, coordinators }: Props) {
                             {c.has_car ? ' · 🚗' : ''}
                             {c.has_driving_license ? ' · 🪪' : ''}
                           </div>
-                        </div>
-                        <div className="text-center shrink-0">
-                          <div className={`text-xl font-black ${score >= 80 ? 'text-green-600' : score >= 60 ? 'text-yellow-600' : 'text-gray-400'}`}>
-                            {score}
-                          </div>
-                          <div className="text-xs text-gray-400">ציון</div>
                         </div>
                       </div>
                       <div className="flex gap-2 mt-3">
