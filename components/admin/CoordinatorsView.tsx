@@ -29,6 +29,7 @@ const ROLE_OPTIONS: { value: CoordinatorRole; label: string }[] = [
   { value: 'factories_dept',    label: 'מנהל/ת מחלקת מפעלים' },
   { value: 'operations_dept',   label: 'מנהל/ת מחלקת תפעול' },
   { value: 'branches_dept',     label: 'מנהל/ת מחלקת סניפים' },
+  { value: 'hagshama_dept',     label: 'מנהל/ת מחלקת הגשמה' },
 ]
 
 const ROLE_BADGE: Record<CoordinatorRole, string> = {
@@ -40,6 +41,7 @@ const ROLE_BADGE: Record<CoordinatorRole, string> = {
   factories_dept:    'bg-orange-100 text-orange-700',
   operations_dept:   'bg-gray-100 text-gray-700',
   branches_dept:     'bg-pink-100 text-pink-700',
+  hagshama_dept:     'bg-green-100 text-green-700',
 }
 
 const emptyForm = { name: '', email: '', phone: '', region: '', role: 'coordinator' as CoordinatorRole, password: '', settlements: '' }

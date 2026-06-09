@@ -36,6 +36,7 @@ export type CoordinatorRole =
   | 'factories_dept'
   | 'operations_dept'
   | 'branches_dept'
+  | 'hagshama_dept'
 
 /** Regions for coordinators — includes real regions + manager merahav + national */
 export type CoordinatorRegion =
@@ -62,6 +63,7 @@ export const COORDINATOR_ROLE_LABELS: Record<CoordinatorRole, string> = {
   factories_dept:    'מנהל/ת מחלקת מפעלים',
   operations_dept:   'מנהל/ת מחלקת תפעול',
   branches_dept:     'מנהל/ת מחלקת סניפים',
+  hagshama_dept:     'מנהל/ת מחלקת הגשמה',
 }
 
 export type CandidateStatus =

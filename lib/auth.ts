@@ -82,7 +82,7 @@ export function isSecretary(user: AuthUser | null): user is Extract<AuthUser, { 
 /** Returns true for any user with admin-level access (admin + manager + secretary + dept heads) */
 export function hasAdminAccess(user: AuthUser | null): boolean {
   if (!user) return false
-  return ['admin', 'manager', 'secretary', 'education_dept', 'factories_dept', 'operations_dept', 'branches_dept'].includes(user.role)
+  return ['admin', 'manager', 'secretary', 'education_dept', 'factories_dept', 'operations_dept', 'branches_dept', 'hagshama_dept'].includes(user.role)
 }
 
 // Verify admin credentials
@@ -119,7 +119,15 @@ export async function verifyCoordinatorCredentials(email: string, password: stri
   // Legacy demo sentinel — only valid in demo mode (no real Supabase configured)
   if (coord.password_hash === 'demo') return coord
   const match = await bcrypt.compare(password, coord.password_hash)
-  return match ? coord : null
+  if (!match) return null
+  // Fallback: if role column not yet added to DB, derive from notes field (temporary)
+  if (!coord.role && coord.notes) {
+    const validRoles = ['coordinator','garin_coordinator','manager','secretary','education_dept','factories_dept','operations_dept','branches_dept','hagshama_dept']
+    if (validRoles.includes(coord.notes)) {
+      return { ...coord, role: coord.notes as any }
+    }
+  }
+  return coord
 }
 
 // Middleware helper

@@ -39,5 +39,20 @@ VALUES
   ('מנהל/ת מחלקת חינוך',       'national',       'education_dept',    '050-0000015', 'education@merakzim.local',        '$2b$12$oqjMpvN/d.6YUn.9F/3R3u/fldb/WSDQXlrYh.fie71olsoVLWvLW', '{}', ''),
   ('מנהל/ת מחלקת מפעלים',      'national',       'factories_dept',    '050-0000016', 'factories@merakzim.local',        '$2b$12$oqjMpvN/d.6YUn.9F/3R3u/fldb/WSDQXlrYh.fie71olsoVLWvLW', '{}', ''),
   ('מנהל/ת מחלקת תפעול',       'national',       'operations_dept',   '050-0000017', 'operations@merakzim.local',       '$2b$12$oqjMpvN/d.6YUn.9F/3R3u/fldb/WSDQXlrYh.fie71olsoVLWvLW', '{}', ''),
-  ('מנהל/ת מחלקת סניפים',      'national',       'branches_dept',     '050-0000018', 'branches@merakzim.local',         '$2b$12$oqjMpvN/d.6YUn.9F/3R3u/fldb/WSDQXlrYh.fie71olsoVLWvLW', '{}', '')
+  ('מנהל/ת מחלקת סניפים',      'national',       'branches_dept',     '050-0000018', 'branches@merakzim.local',         '$2b$12$oqjMpvN/d.6YUn.9F/3R3u/fldb/WSDQXlrYh.fie71olsoVLWvLW', '{}', 'branches_dept'),
+  ('מנהל/ת מחלקת הגשמה',       'national',       'hagshama_dept',     '050-0000019', 'hagshama@merakzim.local',         '$2b$12$oqjMpvN/d.6YUn.9F/3R3u/fldb/WSDQXlrYh.fie71olsoVLWvLW', '{}', 'hagshama_dept')
 ON CONFLICT (email) DO NOTHING;
+
+-- Step 3: Once the role column is added, sync roles from notes field
+-- (run this after ALTER TABLE above)
+UPDATE regional_coordinators
+SET role = notes
+WHERE notes IN ('coordinator','garin_coordinator','manager','secretary',
+                'education_dept','factories_dept','operations_dept','branches_dept','hagshama_dept')
+  AND (role IS NULL OR role = 'coordinator');
+
+-- Step 4: Clear notes for users where we stored the role temporarily
+UPDATE regional_coordinators
+SET notes = ''
+WHERE notes IN ('coordinator','garin_coordinator','manager','secretary',
+                'education_dept','factories_dept','operations_dept','branches_dept','hagshama_dept');
