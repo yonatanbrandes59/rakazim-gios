@@ -1,6 +1,6 @@
 'use client'
 import { useState, useMemo } from 'react'
-import { Candidate, OpenPosition, CoordinatorUser, CANDIDATE_STATUS_LABELS, CANDIDATE_STATUS_COLORS, INTEREST_LEVEL_LABELS, REGION_LABELS } from '@/lib/types'
+import { Candidate, OpenPosition, CoordinatorUser, CANDIDATE_STATUS_LABELS, CANDIDATE_STATUS_COLORS, INTEREST_LEVEL_LABELS, REGION_LABELS, COORDINATOR_REGION_LABELS } from '@/lib/types'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { formatDate, createWhatsAppLink } from '@/lib/utils'
@@ -54,7 +54,7 @@ export function RegionDashboardClient({ user, candidates, positions }: Props) {
           <span className="text-2xl">🗺️</span>
           <div>
             <div className="font-black">רכזים בדרך</div>
-            <div className="text-brand-300 text-xs">אזור: {REGION_LABELS[user.region]} · {user.name}</div>
+            <div className="text-brand-300 text-xs">אזור: {COORDINATOR_REGION_LABELS[user.region] ?? user.region} · {user.name}</div>
           </div>
         </div>
         <button onClick={logout} className="text-brand-300 hover:text-white text-sm transition-colors">יציאה 🚪</button>
@@ -137,7 +137,7 @@ export function RegionDashboardClient({ user, candidates, positions }: Props) {
                       <div className="bg-gray-50 rounded-xl p-3 text-xs text-gray-600">{c.notes}</div>
                     )}
                     <div className="flex gap-2 flex-wrap">
-                      <a href={createWhatsAppLink(c.phone, `היי ${c.first_name}! 👋 אני ${user.name}, רכזת באזור ${REGION_LABELS[user.region]}`)} target="_blank" rel="noopener noreferrer">
+                      <a href={createWhatsAppLink(c.phone, `היי ${c.first_name}! 👋 אני ${user.name}, רכזת באזור ${COORDINATOR_REGION_LABELS[user.region] ?? user.region}`)} target="_blank" rel="noopener noreferrer">
                         <Button variant="whatsapp" size="sm">💬 וואטסאפ</Button>
                       </a>
                       <Button size="sm" variant="secondary" onClick={() => updateStatus(c.id, 'contacted')}>✅ יצרתי קשר</Button>

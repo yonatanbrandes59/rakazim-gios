@@ -165,7 +165,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   if (updates.status && updates.status !== candidate.status) {
     await activityDb.log({
       candidate_id: candidate.id,
-      user_type: user.role,
+      user_type: (user.role === 'manager' || user.role === 'secretary') ? 'admin' : user.role as 'admin' | 'coordinator' | 'candidate' | 'system',
       action: 'status_changed',
       details: { from: candidate.status, to: updates.status },
     })

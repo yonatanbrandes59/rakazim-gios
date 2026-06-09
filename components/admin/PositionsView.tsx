@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { OpenPosition, RegionalCoordinator, REGION_LABELS, REGIONS, PositionStatus } from '@/lib/types'
+import { OpenPosition, RegionalCoordinator, REGION_LABELS, COORDINATOR_REGION_LABELS, REGIONS, PositionStatus } from '@/lib/types'
 import { Button } from '@/components/ui/Button'
 import { Input, Select } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
@@ -169,7 +169,7 @@ export function PositionsView({ initialPositions, coordinators }: Props) {
           </div>
           <Select
             label="רכזת אזורית"
-            options={coordinators.map(c => ({ value: c.id, label: `${c.name} – ${REGION_LABELS[c.region]}` }))}
+            options={coordinators.map(c => ({ value: c.id, label: `${c.name} – ${COORDINATOR_REGION_LABELS[c.region] ?? c.region}` }))}
             value={form.coordinator_id}
             onChange={e => setField('coordinator_id', e.target.value)}
             placeholder="לא שובצה"

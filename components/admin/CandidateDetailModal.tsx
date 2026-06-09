@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { Candidate, RegionalCoordinator, ActivityLogItem, CANDIDATE_STATUS_LABELS, INTEREST_LEVEL_LABELS, REGION_LABELS } from '@/lib/types'
+import { Candidate, RegionalCoordinator, ActivityLogItem, CANDIDATE_STATUS_LABELS, INTEREST_LEVEL_LABELS, REGION_LABELS, COORDINATOR_REGION_LABELS } from '@/lib/types'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { Input, Select } from '@/components/ui/Input'
@@ -141,7 +141,7 @@ ${questionnaireLink}
             />
             <Select
               label="רכזת אזורית"
-              options={coordinators.map(c => ({ value: c.id, label: `${c.name} – ${REGION_LABELS[c.region]}` }))}
+              options={coordinators.map(c => ({ value: c.id, label: `${c.name} – ${COORDINATOR_REGION_LABELS[c.region] ?? c.region}` }))}
               value={assignedCoord}
               onChange={e => setAssignedCoord(e.target.value)}
               placeholder="לא שובצה"
