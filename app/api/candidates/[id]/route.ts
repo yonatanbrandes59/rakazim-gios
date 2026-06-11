@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { requireAuth } from '@/lib/auth'
+import { requireAuth, hasAdminAccess } from '@/lib/auth'
 import { candidatesDb, answersDb, activityDb } from '@/lib/db'
+import { fireTrigger } from '@/services/automationEngine'
 import { Region, UpdateCandidateDto } from '@/lib/types'
 
 // Israeli phone: starts with 05x or +9725x, 10 digits local / 12 with country code
@@ -120,8 +121,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   const answers = await answersDb.findByCandidateId(candidate.id)
   const activity = await activityDb.findByCandidateId(candidate.id)
 
-  // Admins get the full object; coordinators get a sanitized DTO without candidate_token.
-  const responseBody = user.role === 'admin'
+  // Admins & admin-level users get the full object; coordinators get a sanitized DTO without candidate_token.
+  const responseBody = (user.role === 'admin' || hasAdminAccess(user))
     ? { ...candidate, answers, activity }
     : { ...sanitizeCandidateForCoordinator(candidate), answers, activity }
 
@@ -165,10 +166,19 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   if (updates.status && updates.status !== candidate.status) {
     await activityDb.log({
       candidate_id: candidate.id,
-      user_type: (user.role === 'manager' || user.role === 'secretary') ? 'admin' : user.role as 'admin' | 'coordinator' | 'candidate' | 'system',
+      user_type: (user.role === 'admin' || hasAdminAccess(user)) ? 'admin' : 'coordinator',
       action: 'status_changed',
       details: { from: candidate.status, to: updates.status },
     })
+  }
+
+  // Fire coordinator_assigned automation if assignment changed
+  if (
+    updates.assigned_coordinator_id &&
+    updates.assigned_coordinator_id !== candidate.assigned_coordinator_id &&
+    updated
+  ) {
+    fireTrigger('coordinator_assigned', updated).catch(console.error)
   }
 
   return NextResponse.json(updated)
@@ -177,7 +187,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   const user = await requireAuth(req)
   if (user instanceof NextResponse) return user
-  if (user.role !== 'admin') return NextResponse.json({ error: 'אין הרשאה' }, { status: 403 })
+  if (user.role !== 'admin' && !hasAdminAccess(user)) return NextResponse.json({ error: 'אין הרשאה' }, { status: 403 })
 
   await candidatesDb.delete(params.id)
   return NextResponse.json({ ok: true })

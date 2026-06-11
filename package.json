@@ -3,13 +3,18 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "setup": "node scripts/setup.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "seed": "npx tsx scripts/seed.ts",
     "test": "npx tsx scripts/test.ts"
   },
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.104.1",
     "@supabase/supabase-js": "^2.43.4",
     "@types/bcryptjs": "^2.4.6",
     "@vercel/blob": "^2.4.0",

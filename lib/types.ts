@@ -10,6 +10,7 @@ export type Region =
   | 'shfela_tamar'
   | 'merhavim'
   | 'eshkol'
+  | 'nationwide'
 
 export const REGION_LABELS: Record<Region, string> = {
   north:          'צפון',
@@ -21,6 +22,7 @@ export const REGION_LABELS: Record<Region, string> = {
   shfela_tamar:   'שפלה תמר',
   merhavim:       'מרחבים',
   eshkol:         'אשכול',
+  nationwide:     'כל הארץ',
 }
 
 export const REGIONS = Object.keys(REGION_LABELS) as Region[]
@@ -324,6 +326,13 @@ export interface CoordinatorUser {
   role: 'coordinator'
 }
 
+export interface GarinCoordinatorUser {
+  id: string
+  name: string
+  region: CoordinatorRegion
+  role: 'garin_coordinator'
+}
+
 export interface ManagerUser {
   id: string
   name: string
@@ -338,7 +347,14 @@ export interface SecretaryUser {
   role: 'secretary'
 }
 
-export type AuthUser = AdminUser | CoordinatorUser | ManagerUser | SecretaryUser
+export interface DeptHeadUser {
+  id: string
+  name: string
+  region: CoordinatorRegion
+  role: 'education_dept' | 'factories_dept' | 'operations_dept' | 'branches_dept' | 'hagshama_dept'
+}
+
+export type AuthUser = AdminUser | CoordinatorUser | GarinCoordinatorUser | ManagerUser | SecretaryUser | DeptHeadUser
 
 // ── Chatbot ────────────────────────────────────────────────────────────────
 
@@ -353,6 +369,17 @@ export interface ChatStep {
 }
 
 // ── WhatsApp / Automation / Brain ──────────────────────────────────────────
+
+export interface WaChatbotSession {
+  id: string
+  phone: string              // normalized international format (e.g. 972541234567)
+  candidate_id: string
+  step: number               // current question index in QUESTIONS array (-1 = not started)
+  answers: Record<string, string>
+  started_at: string
+  updated_at: string
+  completed: boolean
+}
 
 export interface ConversationMessage {
   id: string

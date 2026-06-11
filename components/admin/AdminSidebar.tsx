@@ -9,9 +9,12 @@ const navItems = [
   { href: '/admin',              icon: '👥', label: 'מועמדים' },
   { href: '/admin/messages',     icon: '💬', label: 'הודעות' },
   { href: '/admin/matches',      icon: '🎯', label: 'התאמות' },
-  { href: '/admin/coordinators', icon: '🗺️', label: 'רכזות אזוריות' },
+  { href: '/admin/coordinators', icon: '👤', label: 'ניהול משתמשים' },
   { href: '/admin/templates',    icon: '📝', label: 'תבניות הודעה' },
   { href: '/admin/brain',        icon: '🧠', label: 'מוח AI' },
+  { href: '/admin/insights',     icon: '📊', label: 'תובנות' },
+  { href: '/admin/whatsapp',     icon: '💚', label: 'WhatsApp' },
+  { href: '/admin/system',       icon: '⚙️', label: 'מצב המערכת' },
 ]
 
 export function AdminSidebar() {
@@ -51,13 +54,13 @@ export function AdminSidebar() {
       {/* Sidebar */}
       <aside
         className={cn(
-          'w-64 bg-brand-900 text-white flex flex-col min-h-screen fixed top-0 right-0 z-40 transition-transform duration-300',
+          'w-64 bg-brand-900 text-white flex flex-col h-screen fixed top-0 right-0 z-40 transition-transform duration-300',
           // On mobile: slide in/out; on desktop: always visible
           open ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'
         )}
       >
         {/* Logo */}
-        <div className="px-6 py-4 border-b border-brand-800">
+        <div className="shrink-0 px-6 py-4 border-b border-brand-800">
           <div className="flex items-center gap-3">
             <Image src="/logo.png" alt="האחוד החקלאי" width={44} height={44} className="rounded-lg bg-white p-0.5" />
             <div>
@@ -68,7 +71,7 @@ export function AdminSidebar() {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-4 space-y-1">
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
           {navItems.map(item => {
             const active = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href))
             return (
@@ -90,7 +93,7 @@ export function AdminSidebar() {
         </nav>
 
         {/* Footer */}
-        <div className="px-3 py-4 border-t border-brand-800">
+        <div className="shrink-0 px-3 py-4 border-t border-brand-800">
           <Link href="/" className="flex items-center gap-3 px-4 py-2 rounded-xl text-brand-300 hover:text-white text-sm transition-colors">
             <span>🌐</span> לאתר הבית
           </Link>

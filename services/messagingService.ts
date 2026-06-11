@@ -6,7 +6,7 @@
  * Saves everything to message_queue for audit trail.
  */
 
-import { messagesDb, candidatesDb, coordinatorsDb, templatesDb, activityDb } from '@/lib/db'
+import { messagesDb, candidatesDb, coordinatorsDb, templatesDb, activityDb, answersDb } from '@/lib/db'
 import { Candidate, RegionalCoordinator, MessageChannel } from '@/lib/types'
 import { fillTemplate, createWhatsAppLink, nextSendingWindow } from '@/lib/utils'
 import { REGION_LABELS } from '@/lib/types'
@@ -14,28 +14,29 @@ import { mockSendWhatsApp, mockSendEmail } from './providers/mockProvider'
 import { resendSendEmail } from './providers/resendProvider'
 import { whatsappCloudSend } from './providers/whatsappCloudProvider'
 import { formatDate } from '@/lib/utils'
+import { getAppUrl } from '@/lib/appUrl'
 
 const FREE_MODE = process.env.FREE_MODE !== 'false'
 const ALLOW_PAID = process.env.ALLOW_PAID_MESSAGING === 'true'
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
 // Build template variables for a candidate
 function buildCandidateVars(candidate: Candidate, coordinator?: RegionalCoordinator | null) {
+  const appUrl = getAppUrl()
   return {
     firstName: candidate.first_name,
     lastName: candidate.last_name,
     fullName: candidate.full_name,
     garin: candidate.garin || '',
     releaseDate: formatDate(candidate.release_date),
-    questionnaireLink: `${APP_URL}/questionnaire/${candidate.candidate_token}`,
-    optOutLink: `${APP_URL}/questionnaire/${candidate.candidate_token}?action=optout`,
+    questionnaireLink: `${appUrl}/questionnaire/${candidate.candidate_token}`,
+    optOutLink: `${appUrl}/questionnaire/${candidate.candidate_token}?action=optout`,
     preferredRegion: candidate.preferred_region ? REGION_LABELS[candidate.preferred_region] : '',
     recommendedContactDate: formatDate(candidate.recommended_contact_date),
     regionalCoordinatorName: coordinator?.name || '',
     regionalCoordinatorPhone: coordinator?.phone || '',
     fitScore: String(candidate.fit_score ?? 0),
     interestLevel: candidate.interest_level || '',
-    candidateAdminLink: `${APP_URL}/admin/candidates/${candidate.id}`,
+    candidateAdminLink: `${appUrl}/admin/candidates/${candidate.id}`,
   }
 }
 
@@ -150,7 +151,19 @@ export async function alertCoordinator(candidate: Candidate): Promise<void> {
   if (!template) return
 
   const vars = buildCandidateVars(candidate, coordinator)
-  const body = fillTemplate(template.body, vars)
+  // Prefer a personalized LLM-drafted alert when ANTHROPIC_API_KEY is configured;
+  // otherwise fall back to the static template. Never blocks on LLM failure.
+  let body = fillTemplate(template.body, vars)
+  try {
+    const { isLlmEnabled, draftCoordinatorAlert } = await import('./llmBrain')
+    if (isLlmEnabled()) {
+      const answers = await answersDb.findByCandidateId(candidate.id)
+      const drafted = await draftCoordinatorAlert(candidate, coordinator, answers)
+      if (drafted) body = drafted
+    }
+  } catch (err) {
+    console.error('[messagingService] LLM draft failed, using template:', err)
+  }
 
   const result = await dispatch('whatsapp', coordinator.phone, coordinator.email, 'מועמד חדש', body)
 
@@ -190,6 +203,77 @@ export async function sendReminderToCandidate(candidateId: string): Promise<void
     recipient_phone: candidate.phone,
     channel: 'whatsapp',
     message_type: 'reminder_to_candidate',
+    message_body: body,
+    scheduled_for: new Date().toISOString(),
+    sent_at: new Date().toISOString(),
+    status: result.status as any,
+    error_message: result.error,
+    retry_count: 0,
+    provider: 'mock',
+    whatsapp_manual_link: result.whatsappManualLink,
+  })
+}
+
+/**
+ * Remind the assigned coordinator that today is the recommended day to contact
+ * a candidate (driven by recommended_contact_date). Uses the
+ * 'reminder_to_coordinator' template.
+ */
+export async function remindCoordinatorToContact(candidate: Candidate): Promise<void> {
+  if (!candidate.assigned_coordinator_id) return
+
+  const coordinator = await coordinatorsDb.findById(candidate.assigned_coordinator_id)
+  if (!coordinator) return
+
+  const template = await templatesDb.findByKey('reminder_to_coordinator')
+  if (!template) return
+
+  const vars = buildCandidateVars(candidate, coordinator)
+  const body = fillTemplate(template.body, vars)
+
+  const result = await dispatch('whatsapp', coordinator.phone, coordinator.email, 'תזכורת לפנייה למועמד', body)
+
+  await messagesDb.create({
+    candidate_id: candidate.id,
+    coordinator_id: coordinator.id,
+    recipient_type: 'coordinator',
+    recipient_phone: coordinator.phone,
+    channel: 'whatsapp',
+    message_type: 'reminder_to_coordinator',
+    message_body: body,
+    scheduled_for: new Date().toISOString(),
+    sent_at: new Date().toISOString(),
+    status: result.status as any,
+    error_message: result.error,
+    retry_count: 0,
+    provider: 'mock',
+    whatsapp_manual_link: result.whatsappManualLink,
+  })
+
+  await activityDb.log({
+    candidate_id: candidate.id,
+    user_type: 'system',
+    action: 'coordinator_contact_reminder',
+    details: { coordinator_id: coordinator.id, recommended_date: candidate.recommended_contact_date },
+  })
+}
+
+export async function alertAdmin(candidate: Candidate): Promise<void> {
+  const adminPhone = process.env.ADMIN_PHONE
+  const template = await templatesDb.findByKey('alert_to_coordinator')
+  if (!template) return
+
+  const vars = buildCandidateVars(candidate)
+  const body = fillTemplate(template.body, vars)
+
+  const result = await dispatch('whatsapp', adminPhone, undefined, 'מועמד חדש/עדכון', body)
+
+  await messagesDb.create({
+    candidate_id: candidate.id,
+    recipient_type: 'admin',
+    recipient_phone: adminPhone,
+    channel: 'whatsapp',
+    message_type: 'alert_to_admin',
     message_body: body,
     scheduled_for: new Date().toISOString(),
     sent_at: new Date().toISOString(),

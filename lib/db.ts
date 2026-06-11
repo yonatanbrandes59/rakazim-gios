@@ -13,12 +13,14 @@ import {
   CandidateFilters, CreateCandidateDto, UpdateCandidateDto,
   QuestionnaireAnswer,
   ConversationMessage, AutomationRule, AutomationLog,
+  CoordinatorRole, WaChatbotSession,
 } from './types'
 import {
   getStore, storeGet, storeFind, storeCreate,
   storeUpdate, storeDelete, initStoreFromBlob, persistStoreToBlob
 } from './store'
 import { generateToken } from './utils'
+import { DEFAULT_AUTOMATION_RULES } from './automationRules'
 
 const USE_SUPABASE = !!(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY)
 
@@ -140,13 +142,25 @@ export const candidatesDb = {
 
 // ── Coordinators ───────────────────────────────────────────────────────────
 
+/** Temporary fallback: derive role from notes field until ALTER TABLE migration is run */
+const VALID_COORDINATOR_ROLES: CoordinatorRole[] = [
+  'coordinator','garin_coordinator','manager','secretary',
+  'education_dept','factories_dept','operations_dept','branches_dept','hagshama_dept',
+]
+function applyRoleFallback(coord: RegionalCoordinator): RegionalCoordinator {
+  if (!coord.role && coord.notes && VALID_COORDINATOR_ROLES.includes(coord.notes as CoordinatorRole)) {
+    return { ...coord, role: coord.notes as CoordinatorRole }
+  }
+  return coord
+}
+
 export const coordinatorsDb = {
   async findAll(): Promise<RegionalCoordinator[]> {
     await ensureBlob()
     if (USE_SUPABASE && supabase) {
       const { data, error } = await supabase.from('regional_coordinators').select('*').order('region')
       if (error) { console.error('[db] coordinators.findAll:', error); return [] }
-      return data ?? []
+      return (data ?? []).map(applyRoleFallback)
     }
     return [...getStore().regional_coordinators]
   },
@@ -156,7 +170,7 @@ export const coordinatorsDb = {
     if (USE_SUPABASE && supabase) {
       const { data, error } = await supabase.from('regional_coordinators').select('*').eq('id', id).single()
       if (error && error.code !== 'PGRST116') console.error('[db] coordinators.findById:', error)
-      return data ?? null
+      return data ? applyRoleFallback(data) : null
     }
     return storeFind<RegionalCoordinator>('regional_coordinators', id)
   },
@@ -166,7 +180,7 @@ export const coordinatorsDb = {
     if (USE_SUPABASE && supabase) {
       const { data, error } = await supabase.from('regional_coordinators').select('*').eq('email', email).single()
       if (error && error.code !== 'PGRST116') console.error('[db] coordinators.findByEmail:', error)
-      return data ?? null
+      return data ? applyRoleFallback(data) : null
     }
     return getStore().regional_coordinators.find(c => c.email === email) ?? null
   },
@@ -418,8 +432,14 @@ export const conversationsDb = {
     await ensureBlob()
     if (USE_SUPABASE && supabase) {
       const now = new Date().toISOString()
-      const { data: row, error } = await supabase.from('conversation_messages').insert([{ ...data, id: uuidv4(), created_at: now }]).select().single()
-      if (error) throw error
+      const item = { ...data, id: uuidv4(), created_at: now }
+      const { data: row, error } = await supabase.from('conversation_messages').insert([item]).select().single()
+      if (error) {
+        // Non-fatal: a missing/unavailable table must not break the WhatsApp
+        // webhook or chatbot flow. Log and return the unpersisted item.
+        console.error('[db] conversations.create (continuing unpersisted):', error.message)
+        return item as ConversationMessage
+      }
       return row
     }
     const store = getStore()
@@ -443,12 +463,27 @@ export const conversationsDb = {
 
 // ── Automation Rules ───────────────────────────────────────────────────────
 
+// Fallback when the automation_rules table doesn't exist yet in Supabase
+// (migration-add-automation.sql not run): serve the hardcoded defaults so the
+// brain UI shows the rules and fireTrigger keeps working. IDs are synthetic —
+// toggling persists only after the migration is applied.
+function defaultRulesFallback(): AutomationRule[] {
+  return DEFAULT_AUTOMATION_RULES.map((r, i) => ({
+    ...r,
+    id: `default-${i}`,
+    created_at: new Date(0).toISOString(),
+  }))
+}
+
 export const automationRulesDb = {
   async findAll(): Promise<AutomationRule[]> {
     await ensureBlob()
     if (USE_SUPABASE && supabase) {
       const { data, error } = await supabase.from('automation_rules').select('*').order('created_at')
-      if (error) { console.error('[db] automationRules.findAll:', error); return [] }
+      if (error) {
+        console.error('[db] automationRules.findAll (falling back to defaults):', error.message)
+        return defaultRulesFallback()
+      }
       return data ?? []
     }
     return [...getStore().automation_rules]
@@ -458,7 +493,10 @@ export const automationRulesDb = {
     await ensureBlob()
     if (USE_SUPABASE && supabase) {
       const { data, error } = await supabase.from('automation_rules').select('*').eq('active', true).order('created_at')
-      if (error) { console.error('[db] automationRules.findActive:', error); return [] }
+      if (error) {
+        console.error('[db] automationRules.findActive (falling back to defaults):', error.message)
+        return defaultRulesFallback().filter(r => r.active)
+      }
       return data ?? []
     }
     return getStore().automation_rules.filter(r => r.active)
@@ -523,5 +561,100 @@ export const automationLogDb = {
     return getStore().automation_log
       .filter(l => l.candidate_id === candidateId)
       .sort((a, b) => b.fired_at.localeCompare(a.fired_at))
+  },
+}
+
+// ── Generic KV (backed by admin_settings) ──────────────────────────────────
+// Lightweight key→string storage for caches and small state. Same storage
+// strategy as waSessionsDb below.
+
+export const kvDb = {
+  async get(key: string): Promise<string | null> {
+    await ensureBlob()
+    if (USE_SUPABASE && supabase) {
+      const { data, error } = await supabase
+        .from('admin_settings').select('value').eq('key', key).single()
+      if (error || !data) return null
+      return data.value as string
+    }
+    return getStore().admin_settings.find(s => s.key === key)?.value ?? null
+  },
+
+  async set(key: string, value: string): Promise<void> {
+    await ensureBlob()
+    const now = new Date().toISOString()
+    if (USE_SUPABASE && supabase) {
+      await supabase
+        .from('admin_settings')
+        .upsert({ key, value, updated_at: now }, { onConflict: 'key' })
+      return
+    }
+    const store = getStore()
+    const idx = store.admin_settings.findIndex(s => s.key === key)
+    if (idx >= 0) {
+      store.admin_settings[idx] = { ...store.admin_settings[idx], value, updated_at: now }
+    } else {
+      store.admin_settings.push({ id: uuidv4(), key, value, created_at: now, updated_at: now })
+    }
+    await persistStoreToBlob()
+  },
+}
+
+// ── WA Chatbot Sessions ────────────────────────────────────────────────────
+// Sessions are stored as JSON blobs in admin_settings, keyed as wa_session_{phone}.
+// They're transient (one per active chatbot conversation) and cleaned up on completion.
+
+export const waSessionsDb = {
+  async get(phone: string): Promise<WaChatbotSession | null> {
+    await ensureBlob()
+    const key = `wa_session_${phone}`
+    if (USE_SUPABASE && supabase) {
+      const { data, error } = await supabase
+        .from('admin_settings')
+        .select('value')
+        .eq('key', key)
+        .single()
+      if (error || !data) return null
+      try { return JSON.parse(data.value) as WaChatbotSession } catch { return null }
+    }
+    const setting = getStore().admin_settings.find(s => s.key === key)
+    if (!setting) return null
+    try { return JSON.parse(setting.value) as WaChatbotSession } catch { return null }
+  },
+
+  async set(session: WaChatbotSession): Promise<void> {
+    await ensureBlob()
+    const key = `wa_session_${session.phone}`
+    const value = JSON.stringify(session)
+    const now = new Date().toISOString()
+    if (USE_SUPABASE && supabase) {
+      await supabase
+        .from('admin_settings')
+        .upsert({ key, value, updated_at: now }, { onConflict: 'key' })
+      return
+    }
+    const store = getStore()
+    const idx = store.admin_settings.findIndex(s => s.key === key)
+    if (idx >= 0) {
+      store.admin_settings[idx] = { ...store.admin_settings[idx], value, updated_at: now }
+    } else {
+      store.admin_settings.push({ id: uuidv4(), key, value, created_at: now, updated_at: now })
+    }
+    await persistStoreToBlob()
+  },
+
+  async delete(phone: string): Promise<void> {
+    await ensureBlob()
+    const key = `wa_session_${phone}`
+    if (USE_SUPABASE && supabase) {
+      await supabase.from('admin_settings').delete().eq('key', key)
+      return
+    }
+    const store = getStore()
+    const idx = store.admin_settings.findIndex(s => s.key === key)
+    if (idx >= 0) {
+      store.admin_settings.splice(idx, 1)
+      await persistStoreToBlob()
+    }
   },
 }

@@ -1,12 +1,13 @@
 import { redirect } from 'next/navigation'
-import { getAuthUser } from '@/lib/auth'
+import { getAuthUser, hasAdminAccess } from '@/lib/auth'
 import { candidatesDb, coordinatorsDb, positionsDb } from '@/lib/db'
 import { RegionDashboardClient } from '@/components/region/RegionDashboardClient'
 
 export default async function RegionPage() {
   const user = await getAuthUser()
   if (!user) redirect('/region/login')
-  if (user.role === 'admin') redirect('/admin')
+  // Managers, secretaries, dept heads belong in /admin — send them there
+  if (user.role === 'admin' || hasAdminAccess(user)) redirect('/admin')
 
   const [scopedCandidates, coordinator, positions] = await Promise.all([
     // Scope at DB level — only fetch this coordinator's candidates, never all candidates

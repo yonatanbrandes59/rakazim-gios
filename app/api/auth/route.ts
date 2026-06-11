@@ -3,6 +3,7 @@ import {
   signToken, verifyAdminCredentials, verifyCoordinatorCredentials,
   getAuthUserFromRequest, setAuthCookie, clearAuthCookie
 } from '@/lib/auth'
+import type { CoordinatorRole, CoordinatorRegion } from '@/lib/types'
 
 // ── In-memory brute-force protection ─────────────────────────────────────────
 // Max 10 failed attempts per IP within a 15-minute window.
@@ -47,13 +48,14 @@ export async function POST(req: NextRequest) {
 
   const { email, password } = await req.json()
 
-  // Try admin — verifyAdminCredentials throws in production when env vars are missing
+  // Try admin — verifyAdminCredentials throws in production when env vars are
+  // missing. Don't 500 the whole login on that: log it and fall through to the
+  // coordinator check so coordinators/managers can still sign in.
   let adminOk = false
   try {
     adminOk = verifyAdminCredentials(email, password)
   } catch (err) {
-    console.error('[auth] verifyAdminCredentials threw:', err)
-    return NextResponse.json({ error: 'שגיאת תצורת שרת' }, { status: 500 })
+    console.error('[auth] verifyAdminCredentials threw (admin login disabled, falling through to coordinator login):', err)
   }
 
   if (adminOk) {
@@ -64,12 +66,17 @@ export async function POST(req: NextRequest) {
     return res
   }
 
-  // Try coordinator / manager / secretary
+  // Try coordinator / manager / secretary / dept head
   const coord = await verifyCoordinatorCredentials(email, password)
   if (coord) {
     resetRateLimit(ip)
-    const coordRole = (coord.role as 'coordinator' | 'manager' | 'secretary') || 'coordinator'
-    const token = await signToken({ id: coord.id, name: coord.name, region: coord.region as any, role: coordRole })
+    const coordRole: CoordinatorRole = (coord.role as CoordinatorRole) || 'coordinator'
+    const token = await signToken({
+      id: coord.id,
+      name: coord.name,
+      region: coord.region as CoordinatorRegion,
+      role: coordRole,
+    } as any)
     const res = NextResponse.json({ ok: true, role: coordRole, name: coord.name, region: coord.region })
     setAuthCookie(res, token)
     return res

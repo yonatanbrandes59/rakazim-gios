@@ -4,6 +4,7 @@ import { requireAuth } from '@/lib/auth'
 import { candidatesDb, coordinatorsDb, activityDb } from '@/lib/db'
 import { scoreAndAssignCandidate } from '@/services/scoringService'
 import { sendOpeningToCandidates } from '@/services/messagingService'
+import { fireTrigger } from '@/services/automationEngine'
 import { CandidateFilters, Region, REGIONS } from '@/lib/types'
 
 // Israeli phone: starts with 05x or +9725x, 10 digits local / 12 with country code
@@ -70,6 +71,9 @@ export async function POST(req: NextRequest) {
       action: 'candidate_created',
       details: { source: 'manual' },
     })
+
+    // Fire automation rules for new candidate (async — don't block response)
+    fireTrigger('candidate_created', candidate).catch(console.error)
   }
 
   // Return 400 if all items failed validation (single-item case)

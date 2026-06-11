@@ -11,6 +11,7 @@ import { calculateFitScore } from './scoringService'
 import { templatesDb } from '@/lib/db'
 import { fillTemplate, formatDate } from '@/lib/utils'
 import { REGION_LABELS } from '@/lib/types'
+import { getAppUrl } from '@/lib/appUrl'
 
 // ── analyzeCandidateProfile ────────────────────────────────────────────────
 
@@ -136,7 +137,7 @@ export async function generatePersonalizedMessage(
   if (!template) return ''
 
   const regionLabel = candidate.preferred_region ? REGION_LABELS[candidate.preferred_region] : ''
-  const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  const APP_URL = getAppUrl()
 
   const vars: Record<string, string> = {
     firstName: candidate.first_name,

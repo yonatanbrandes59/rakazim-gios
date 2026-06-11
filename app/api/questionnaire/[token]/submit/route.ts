@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { candidatesDb, answersDb, activityDb } from '@/lib/db'
 import { scoreAndAssignCandidate } from '@/services/scoringService'
-import { sendThankYouToCandidate, alertCoordinator } from '@/services/messagingService'
+import { fireTrigger } from '@/services/automationEngine'
 import { Region } from '@/lib/types'
 
 export async function POST(req: NextRequest, { params }: { params: { token: string } }) {
@@ -85,11 +85,14 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
     details: { fit_score: scoring.fit_score, interest_level: scoring.interest_level },
   })
 
-  // Fire notifications (async, don't await to avoid timeout)
+  // Fire automation rules (async — don't block response)
   const updatedCandidate = await candidatesDb.findById(candidate.id)
   if (updatedCandidate) {
-    sendThankYouToCandidate(candidate.id).catch(console.error)
-    alertCoordinator(updatedCandidate).catch(console.error)
+    fireTrigger('questionnaire_completed', updatedCandidate).catch(console.error)
+    // Also check if candidate became very_hot → flag_priority automation
+    if (updatedCandidate.interest_level === 'very_hot' || (updatedCandidate.fit_score ?? 0) >= 70) {
+      fireTrigger('fit_score_high', updatedCandidate).catch(console.error)
+    }
   }
 
   return NextResponse.json({

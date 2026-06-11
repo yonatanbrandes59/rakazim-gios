@@ -135,12 +135,15 @@ export function calculateFitScore(input: ScoringInput): {
   return { score, reason: reasonText, interestLevel: finalLevel, contactDate }
 }
 
-// Assign a candidate to the matching regional coordinator
+// Assign a candidate to the matching regional coordinator.
+// For 'nationwide', prefer a national-level coordinator; otherwise leave unassigned.
 export async function assignCoordinator(candidate: Candidate): Promise<string | null> {
-  if (!candidate.preferred_region) {
-    return null
-  }
+  if (!candidate.preferred_region) return null
   const coordinators = await coordinatorsDb.findAll()
+  if (candidate.preferred_region === 'nationwide') {
+    const national = coordinators.find(c => c.region === 'national' || c.role === 'secretary')
+    return national?.id ?? null
+  }
   const match = coordinators.find(c => c.region === candidate.preferred_region)
   return match?.id ?? null
 }

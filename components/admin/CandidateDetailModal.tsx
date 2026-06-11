@@ -37,6 +37,8 @@ export function CandidateDetailModal({ candidate, coordinators, onClose, onUpdat
   const [activity, setActivity] = useState<ActivityLogItem[]>([])
   const [activityLoading, setActivityLoading] = useState(false)
   const [activityLoaded, setActivityLoaded] = useState(false)
+  const [aiSummary, setAiSummary] = useState<string | null>(null)
+  const [aiSummaryState, setAiSummaryState] = useState<'idle' | 'loading' | 'done' | 'disabled'>('idle')
 
   useEffect(() => {
     if (tab === 'history' && !activityLoaded) {
@@ -51,6 +53,20 @@ export function CandidateDetailModal({ candidate, coordinators, onClose, onUpdat
         .finally(() => setActivityLoading(false))
     }
   }, [tab, activityLoaded, candidate.id])
+
+  // Lazy-load the LLM summary when the info tab is shown (no-op if no API key).
+  useEffect(() => {
+    if (tab !== 'info' || aiSummaryState !== 'idle') return
+    setAiSummaryState('loading')
+    fetch(`/api/brain/summary/${candidate.id}`)
+      .then(r => r.json())
+      .then(data => {
+        if (!data.enabled) { setAiSummaryState('disabled'); return }
+        setAiSummary(data.summary ?? null)
+        setAiSummaryState('done')
+      })
+      .catch(() => setAiSummaryState('disabled'))
+  }, [tab, aiSummaryState, candidate.id])
 
   async function handleSave() {
     setSaving(true)
@@ -103,6 +119,24 @@ ${questionnaireLink}
 
       {tab === 'info' && (
         <div className="space-y-4">
+          {/* AI summary (only when LLM is configured) */}
+          {aiSummaryState === 'loading' && (
+            <div className="bg-brand-50 border border-brand-100 rounded-xl p-3 text-sm text-brand-400 animate-pulse">
+              🧠 מנתח מועמד…
+            </div>
+          )}
+          {aiSummaryState === 'done' && aiSummary && (
+            <div className="bg-gradient-to-l from-brand-50 to-indigo-50 border border-brand-100 rounded-xl p-3">
+              <div className="flex items-start gap-2">
+                <span className="text-lg shrink-0">🧠</span>
+                <div>
+                  <div className="text-xs font-bold text-brand-700 mb-0.5">תובנת AI</div>
+                  <div className="text-sm text-gray-700 leading-relaxed">{aiSummary}</div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Interest + contact row */}
           <div className="flex gap-3">
             <div className="flex-1 bg-gray-50 border border-gray-200 rounded-xl p-4 text-center">

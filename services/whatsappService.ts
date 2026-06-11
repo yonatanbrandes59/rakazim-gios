@@ -95,9 +95,16 @@ export async function sendMessage(
 
 // ── parseIncoming ──────────────────────────────────────────────────────────
 
-export function parseIncoming(
-  webhookBody: unknown,
-): { phone: string; messageId: string; body: string; timestamp: number } | null {
+export interface ParsedIncoming {
+  phone: string
+  messageId: string
+  body: string          // text body OR the label of the selected interactive option
+  interactiveId?: string // for interactive replies: the id of the chosen button/row
+  timestamp: number
+  type: 'text' | 'interactive' | 'other'
+}
+
+export function parseIncoming(webhookBody: unknown): ParsedIncoming | null {
   try {
     const payload = webhookBody as Record<string, unknown>
     const entry = (payload.entry as unknown[])?.[0] as Record<string, unknown>
@@ -111,11 +118,42 @@ export function parseIncoming(
     const phone = (msg.from as string) ?? ''
     const messageId = (msg.id as string) ?? ''
     const timestamp = Number(msg.timestamp ?? 0)
-    const text = msg.text as Record<string, unknown> | undefined
-    const body = (text?.body as string) ?? ''
+    const msgType = (msg.type as string) ?? 'other'
 
     if (!phone || !messageId) return null
-    return { phone, messageId, body, timestamp }
+
+    // ── Interactive replies (button_reply / list_reply) ──────────────────
+    if (msgType === 'interactive') {
+      const interactive = msg.interactive as Record<string, unknown> | undefined
+      const interactiveType = interactive?.type as string | undefined
+
+      if (interactiveType === 'button_reply') {
+        const reply = interactive?.button_reply as Record<string, unknown>
+        const id = (reply?.id as string) ?? ''
+        const title = (reply?.title as string) ?? ''
+        return { phone, messageId, body: title, interactiveId: id, timestamp, type: 'interactive' }
+      }
+
+      if (interactiveType === 'list_reply') {
+        const reply = interactive?.list_reply as Record<string, unknown>
+        const id = (reply?.id as string) ?? ''
+        const title = (reply?.title as string) ?? ''
+        return { phone, messageId, body: title, interactiveId: id, timestamp, type: 'interactive' }
+      }
+
+      // Unknown interactive sub-type
+      return { phone, messageId, body: '', timestamp, type: 'other' }
+    }
+
+    // ── Plain text ────────────────────────────────────────────────────────
+    if (msgType === 'text') {
+      const text = msg.text as Record<string, unknown> | undefined
+      const body = (text?.body as string) ?? ''
+      return { phone, messageId, body, timestamp, type: 'text' }
+    }
+
+    // ── Other types (image, audio, document, etc.) ────────────────────────
+    return { phone, messageId, body: '', timestamp, type: 'other' }
   } catch {
     return null
   }

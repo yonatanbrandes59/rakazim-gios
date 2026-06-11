@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import { Candidate } from '@/lib/types'
 import { QUESTIONS } from './questions'
 
@@ -295,9 +296,15 @@ export function ChatbotClient({ candidate, token }: Props) {
     <div className="min-h-screen bg-gradient-to-br from-brand-800 via-brand-700 to-blue-600 flex flex-col items-center justify-start p-4 pt-6">
       {/* Header */}
       <div className="w-full max-w-md mb-4 flex items-center gap-3">
-        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-xl shadow-lg">🌟</div>
+        <Image
+          src="/logo.png"
+          alt="האיחוד החקלאי"
+          width={44}
+          height={44}
+          className="rounded-full shadow-lg bg-white p-0.5 shrink-0"
+        />
         <div>
-          <div className="text-white font-black">רכזים בדרך</div>
+          <div className="text-white font-black">האיחוד החקלאי</div>
           <div className="text-blue-200 text-xs">שאלון התאמה לתפקיד רכז/ת נוער</div>
         </div>
         {/* Progress */}

@@ -214,7 +214,7 @@ export function CandidatesDashboard({ initialCandidates, coordinators, stats }: 
                     </td>
                     <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                       <a
-                        href={createWhatsAppLink(c.phone, `היי ${c.first_name}! 👋\n\nפונה אליך כי היית בעבר בגרעין, ועכשיו כשאתה לקראת שחרור / אחרי שחרור מהצבא, אנחנו בודקים התאמות לתפקידי רכז/ת נוער / רכז/ת סניף.\n\nשאלון קצר ולא מחייב:\n${window.location.origin}/questionnaire/${c.candidate_token}\n\nאם זה לא רלוונטי, אפשר להשיב "לא מעוניין" 🙏`)}
+                        href={createWhatsAppLink(c.phone, `היי ${c.first_name}! 👋\n\nפונה אליך כי היית בעבר בגרעין, ועכשיו כשאתה לקראת שחרור / אחרי שחרור מהצבא, אנחנו בודקים התאמות לתפקידי רכז/ת נוער / רכז/ת סניף.\n\nשאלון קצר ולא מחייב:\n${typeof window !== 'undefined' ? window.location.origin : ''}/questionnaire/${c.candidate_token}\n\nאם זה לא רלוונטי, אפשר להשיב "לא מעוניין" 🙏`)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-green-600 hover:text-green-700 text-lg"

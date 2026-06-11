@@ -44,6 +44,40 @@ const ROLE_BADGE: Record<CoordinatorRole, string> = {
   hagshama_dept:     'bg-green-100 text-green-700',
 }
 
+// Role group definitions
+const ROLE_GROUPS: { title: string; icon: string; roles: CoordinatorRole[]; headerColor: string }[] = [
+  {
+    title: 'רכזי אזור',
+    icon: '🗺️',
+    roles: ['coordinator'],
+    headerColor: 'bg-brand-50 border-brand-200 text-brand-800',
+  },
+  {
+    title: 'רכזי גרעין',
+    icon: '🌱',
+    roles: ['garin_coordinator'],
+    headerColor: 'bg-teal-50 border-teal-200 text-teal-800',
+  },
+  {
+    title: 'מנהלי מרחב',
+    icon: '🏢',
+    roles: ['manager'],
+    headerColor: 'bg-purple-50 border-purple-200 text-purple-800',
+  },
+  {
+    title: 'ניהול ארצי',
+    icon: '🏛️',
+    roles: ['secretary'],
+    headerColor: 'bg-yellow-50 border-yellow-200 text-yellow-800',
+  },
+  {
+    title: 'ראשי מחלקות',
+    icon: '📚',
+    roles: ['education_dept', 'factories_dept', 'operations_dept', 'branches_dept', 'hagshama_dept'],
+    headerColor: 'bg-blue-50 border-blue-200 text-blue-800',
+  },
+]
+
 const emptyForm = { name: '', email: '', phone: '', region: '', role: 'coordinator' as CoordinatorRole, password: '', settlements: '' }
 
 export function CoordinatorsView({ initialCoordinators }: Props) {
@@ -106,53 +140,81 @@ export function CoordinatorsView({ initialCoordinators }: Props) {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('למחוק את הרכזת?')) return
+    if (!confirm('למחוק את המשתמש?')) return
     await fetch(`/api/coordinators/${id}`, { method: 'DELETE' })
     setCoordinators(prev => prev.filter(c => c.id !== id))
   }
 
+  const totalCount = coordinators.length
+
   return (
     <div className="p-6 space-y-6">
+      {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-gray-900">רכזות אזוריות</h1>
-          <p className="text-gray-500 text-sm mt-0.5">ניהול גישות ואזורי אחריות</p>
+          <h1 className="text-2xl font-black text-gray-900">ניהול משתמשים</h1>
+          <p className="text-gray-500 text-sm mt-0.5">{totalCount} משתמשים · ניהול גישות ואזורי אחריות</p>
         </div>
-        <Button onClick={startAdd}>+ הוסף רכזת</Button>
+        <Button onClick={startAdd}>+ הוסף משתמש</Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {coordinators.map(c => (
-          <div key={c.id} className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="font-bold text-gray-900">{c.name}</h3>
-                <div className="flex gap-1 flex-wrap mt-1">
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${ROLE_BADGE[c.role || 'coordinator']}`}>
-                    {COORDINATOR_ROLE_LABELS[c.role || 'coordinator']}
-                  </span>
-                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                    {COORDINATOR_REGION_LABELS[c.region] ?? c.region}
-                  </span>
-                </div>
+      {/* Grouped sections */}
+      <div className="space-y-8">
+        {ROLE_GROUPS.map(group => {
+          const groupCoords = coordinators.filter(c =>
+            group.roles.includes(c.role || 'coordinator')
+          )
+          if (groupCoords.length === 0) return null
+          return (
+            <section key={group.title}>
+              {/* Section header */}
+              <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border mb-3 ${group.headerColor}`}>
+                <span className="text-lg">{group.icon}</span>
+                <h2 className="font-bold text-base">{group.title}</h2>
+                <span className="mr-auto text-xs font-semibold bg-white/60 rounded-full px-2 py-0.5">
+                  {groupCoords.length}
+                </span>
               </div>
-              <div className="flex gap-1">
-                <Button variant="ghost" size="sm" onClick={() => startEdit(c)}>✏️</Button>
-                <Button variant="danger" size="sm" onClick={() => handleDelete(c.id)}>🗑️</Button>
+
+              {/* Cards grid */}
+              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                {groupCoords.map(c => (
+                  <UserCard
+                    key={c.id}
+                    coordinator={c}
+                    onEdit={startEdit}
+                    onDelete={handleDelete}
+                  />
+                ))}
               </div>
-            </div>
-            <div className="mt-3 space-y-1 text-sm text-gray-600">
-              <p>📧 {c.email}</p>
-              <p>📱 {c.phone}</p>
-              {c.settlements?.length ? (
-                <p className="text-xs">🏘️ {c.settlements.join(', ')}</p>
-              ) : null}
-            </div>
-          </div>
-        ))}
+            </section>
+          )
+        })}
+
+        {/* Unassigned / unknown role */}
+        {(() => {
+          const knownRoles = ROLE_GROUPS.flatMap(g => g.roles)
+          const ungrouped = coordinators.filter(c => !knownRoles.includes(c.role || 'coordinator') && c.role !== 'coordinator')
+          if (!ungrouped.length) return null
+          return (
+            <section>
+              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl border mb-3 bg-gray-50 border-gray-200 text-gray-700">
+                <span className="text-lg">❓</span>
+                <h2 className="font-bold text-base">אחר</h2>
+                <span className="mr-auto text-xs font-semibold bg-white/60 rounded-full px-2 py-0.5">{ungrouped.length}</span>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                {ungrouped.map(c => (
+                  <UserCard key={c.id} coordinator={c} onEdit={startEdit} onDelete={handleDelete} />
+                ))}
+              </div>
+            </section>
+          )
+        })()}
       </div>
 
-      <Modal isOpen={showForm} onClose={() => setShowForm(false)} title={editing ? `עריכת ${editing.name}` : 'הוספת רכזת חדשה'}>
+      {/* Add/Edit modal */}
+      <Modal isOpen={showForm} onClose={() => setShowForm(false)} title={editing ? `עריכת ${editing.name}` : 'הוספת משתמש חדש'}>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <Input label="שם מלא *" value={form.name} onChange={e => setField('name', e.target.value)} required />
@@ -198,6 +260,54 @@ export function CoordinatorsView({ initialCoordinators }: Props) {
           </div>
         </form>
       </Modal>
+    </div>
+  )
+}
+
+// ── User card sub-component ─────────────────────────────────────────────────
+
+interface CardProps {
+  coordinator: RegionalCoordinator
+  onEdit: (c: RegionalCoordinator) => void
+  onDelete: (id: string) => void
+}
+
+function UserCard({ coordinator: c, onEdit, onDelete }: CardProps) {
+  const role = c.role || 'coordinator'
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 hover:shadow-md transition-shadow">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <h3 className="font-bold text-gray-900 truncate">{c.name}</h3>
+          <div className="flex gap-1 flex-wrap mt-1">
+            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ROLE_BADGE[role]}`}>
+              {COORDINATOR_ROLE_LABELS[role]}
+            </span>
+            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+              {COORDINATOR_REGION_LABELS[c.region] ?? c.region}
+            </span>
+          </div>
+        </div>
+        <div className="flex gap-1 shrink-0">
+          <button
+            onClick={() => onEdit(c)}
+            className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
+            title="עריכה"
+          >✏️</button>
+          <button
+            onClick={() => onDelete(c.id)}
+            className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors"
+            title="מחיקה"
+          >🗑️</button>
+        </div>
+      </div>
+      <div className="mt-3 space-y-1 text-sm text-gray-600">
+        <p className="truncate">📧 {c.email}</p>
+        <p>📱 {c.phone}</p>
+        {c.settlements?.length ? (
+          <p className="text-xs text-gray-400 truncate">🏘️ {c.settlements.join(', ')}</p>
+        ) : null}
+      </div>
     </div>
   )
 }

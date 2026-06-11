@@ -24,7 +24,9 @@ export default function AdminLogin() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      if (data.role === 'coordinator' || data.role === 'garin_coordinator') router.push('/region')
+      // Coordinators go to their regional dashboard; everyone else goes to admin
+      const regionRoles = ['coordinator', 'garin_coordinator']
+      if (regionRoles.includes(data.role)) router.push('/region')
       else router.push('/admin')
     } catch (err: any) {
       setError(err.message)

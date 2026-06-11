@@ -89,6 +89,7 @@ export const QUESTIONS: ChatStep[] = [
       { value: 'shfela_tamar', label: 'שפלה תמר' },
       { value: 'merhavim',     label: 'מרחבים' },
       { value: 'eshkol',       label: 'אשכול' },
+      { value: 'nationwide',   label: 'כל הארץ' },
     ],
   },
 

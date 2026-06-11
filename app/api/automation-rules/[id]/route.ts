@@ -23,6 +23,15 @@ export async function PUT(
 
   const { id } = await params
 
+  // Synthetic ids come from the defaults fallback (automation_rules table not
+  // migrated yet) — there is nothing in the DB to update.
+  if (id.startsWith('default-')) {
+    return NextResponse.json(
+      { error: 'החוקים רצים על ברירת מחדל — הרץ את database/migration-add-automation.sql ב-Supabase כדי לאפשר עריכה' },
+      { status: 409 },
+    )
+  }
+
   let body: unknown
   try {
     body = await req.json()
