@@ -5,8 +5,12 @@ import bcrypt from 'bcryptjs'
 import { AuthUser } from './types'
 import { getStore } from './store'
 
-// In production, JWT_SECRET must be explicitly set — no insecure fallback allowed.
-if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+// In production at runtime, JWT_SECRET must be set. Skip during next build phase.
+if (
+  process.env.NODE_ENV === 'production' &&
+  process.env.NEXT_PHASE !== 'phase-production-build' &&
+  !process.env.JWT_SECRET
+) {
   throw new Error('[auth] JWT_SECRET env var must be set in production. Set it in your Vercel dashboard or .env.local.')
 }
 
