@@ -8,97 +8,15 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    env:
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Verify token
+      - name: Notify deploy
         run: |
-          if [ -z "$VERCEL_TOKEN" ]; then
-            echo "ERROR: VERCEL_TOKEN secret is empty or not set"
-            exit 1
-          fi
-          echo "Token is set (length: ${#VERCEL_TOKEN})"
-
-      - name: Get Vercel project info
-        id: project
-        run: |
-          RESULT=$(curl -sf -H "Authorization: Bearer $VERCEL_TOKEN" \
-            "https://api.vercel.com/v9/projects?limit=20" 2>&1)
-          echo "$RESULT" | node -e "
-            let d='';
-            process.stdin.on('data',c=>d+=c).on('end',()=>{
-              const r=JSON.parse(d);
-              const p=r.projects.find(x=>x.name==='rakazim-gios')||r.projects[0];
-              console.log('PROJECT_ID='+p.id);
-              console.log('PROJECT_NAME='+p.name);
-              const link=p.link||{};
-              console.log('ORG_ID='+(p.accountId||''));
-            })
-          " >> $GITHUB_ENV
-          echo "Found project: $(echo $RESULT | node -e \"let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const r=JSON.parse(d);console.log(r.projects.map(x=>x.name).join(', '))})\")"
-
-      - name: Set environment variables
-        run: |
-          set_env_var() {
-            local KEY=$1
-            local VALUE=$2
-            # Remove existing var first
-            curl -sf -X DELETE \
-              -H "Authorization: Bearer $VERCEL_TOKEN" \
-              "https://api.vercel.com/v9/projects/$PROJECT_ID/env/$KEY" 2>/dev/null || true
-
-            # Add new var
-            curl -sf -X POST \
-              -H "Authorization: Bearer $VERCEL_TOKEN" \
-              -H "Content-Type: application/json" \
-              -d "{\"key\":\"$KEY\",\"value\":\"$VALUE\",\"type\":\"encrypted\",\"target\":[\"production\",\"preview\"]}" \
-              "https://api.vercel.com/v9/projects/$PROJECT_ID/env" > /dev/null
-            echo "✓ Set $KEY"
-          }
-
-          set_env_var "JWT_SECRET"     "3efb08ab170398ae1b3a447acc0714eed773dc26b8486967297d542bb3e2eec1"
-          set_env_var "CRON_SECRET"    "5737e6c82ff6651c4b248d31996911f08a90da3409f3c8c25efc5c22dda0cb47"
-          set_env_var "ADMIN_EMAIL"    "admin@rakazim.co.il"
-          set_env_var "ADMIN_PASSWORD" "Rakazim2025!"
-          set_env_var "FREE_MODE"      "true"
-          set_env_var "ALLOW_PAID_MESSAGING" "false"
-          set_env_var "MESSAGING_PROVIDER"   "mock"
-
-      - name: Trigger Vercel redeploy
-        run: |
-          # Get latest deployment and redeploy it
-          LATEST=$(curl -sf -H "Authorization: Bearer $VERCEL_TOKEN" \
-            "https://api.vercel.com/v6/deployments?projectId=$PROJECT_ID&limit=1&target=production" | \
-            node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const r=JSON.parse(d);console.log(r.deployments[0]?.uid||'')})")
-
-          if [ -n "$LATEST" ]; then
-            echo "Redeploying $LATEST..."
-            curl -sf -X POST \
-              -H "Authorization: Bearer $VERCEL_TOKEN" \
-              -H "Content-Type: application/json" \
-              -d "{\"deploymentId\":\"$LATEST\",\"name\":\"rakazim-gios\"}" \
-              "https://api.vercel.com/v13/deployments" > /dev/null
-            echo "✓ Redeploy triggered"
-          else
-            echo "No existing deployment found, Vercel will auto-deploy from GitHub"
-          fi
-
-      - name: Get deployment URL
-        run: |
-          sleep 5
-          URL=$(curl -sf -H "Authorization: Bearer $VERCEL_TOKEN" \
-            "https://api.vercel.com/v9/projects/$PROJECT_ID" | \
-            node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const r=JSON.parse(d);console.log('https://'+(r.targets?.production?.alias?.[0]||r.alias?.[0]||r.name+'.vercel.app'))})")
-
-          echo "🚀 App URL: $URL"
-          echo "📋 Survey URL: $URL/apply"
-
-          # Set the app URL env var
-          curl -sf -X POST \
-            -H "Authorization: Bearer $VERCEL_TOKEN" \
-            -H "Content-Type: application/json" \
-            -d "{\"key\":\"NEXT_PUBLIC_APP_URL\",\"value\":\"$URL\",\"type\":\"plain\",\"target\":[\"production\",\"preview\"]}" \
-            "https://api.vercel.com/v9/projects/$PROJECT_ID/env" > /dev/null || true
-          echo "✓ Set NEXT_PUBLIC_APP_URL=$URL"
+          echo "✅ Push to master detected — Vercel auto-deploy triggered"
+          echo "📋 Survey URL: https://rakazim-gios.vercel.app/apply"
+          echo "🔧 Admin URL:  https://rakazim-gios.vercel.app/admin"
+          echo ""
+          echo "Environment variables are configured via vercel.json"
+          echo "If you need to update secrets, go to:"
+          echo "https://vercel.com/yonatanbrandes59/rakazim-gios/settings/environment-variables"
