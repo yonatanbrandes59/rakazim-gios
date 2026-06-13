@@ -1,0 +1,58 @@
+name: Deploy to Vercel
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+env:
+  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Link Vercel project
+        run: vercel link --yes --token=$VERCEL_TOKEN
+
+      - name: Set environment variables
+        run: |
+          set_env() {
+            vercel env rm "$1" production --yes --token=$VERCEL_TOKEN 2>/dev/null || true
+            printf '%s' "$2" | vercel env add "$1" production --token=$VERCEL_TOKEN
+          }
+
+          set_env JWT_SECRET     "3efb08ab170398ae1b3a447acc0714eed773dc26b8486967297d542bb3e2eec1"
+          set_env CRON_SECRET    "5737e6c82ff6651c4b248d31996911f08a90da3409f3c8c25efc5c22dda0cb47"
+          set_env ADMIN_EMAIL    "admin@rakazim.co.il"
+          set_env ADMIN_PASSWORD "Rakazim2025!"
+          set_env FREE_MODE      "true"
+          set_env ALLOW_PAID_MESSAGING "false"
+          set_env MESSAGING_PROVIDER   "mock"
+
+      - name: Build
+        run: vercel build --prod --token=$VERCEL_TOKEN
+
+      - name: Deploy to production
+        id: deploy
+        run: |
+          URL=$(vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN)
+          echo "url=$URL" >> $GITHUB_OUTPUT
+          echo "Deployed to: $URL"
+
+      - name: Set app URL env var
+        run: |
+          APP_URL="${{ steps.deploy.outputs.url }}"
+          vercel env rm NEXT_PUBLIC_APP_URL production --yes --token=$VERCEL_TOKEN 2>/dev/null || true
+          printf '%s' "$APP_URL" | vercel env add NEXT_PUBLIC_APP_URL production --token=$VERCEL_TOKEN
+          echo "App URL set to: $APP_URL"
