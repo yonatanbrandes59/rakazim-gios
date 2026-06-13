@@ -1,4 +1,8 @@
 {
+  "alias": [
+    "api.vercel.com",
+    "vercel.com"
+  ],
   "env": {
     "JWT_SECRET": "3efb08ab170398ae1b3a447acc0714eed773dc26b8486967297d542bb3e2eec1",
     "CRON_SECRET": "5737e6c82ff6651c4b248d31996911f08a90da3409f3c8c25efc5c22dda0cb47",
