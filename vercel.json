@@ -1,4 +1,8 @@
 {
+  "alias": [
+    "api.vercel.com",
+    "vercel.com"
+  ],
   "env": {
     "JWT_SECRET": "3efb08ab170398ae1b3a447acc0714eed773dc26b8486967297d542bb3e2eec1",
     "CRON_SECRET": "5737e6c82ff6651c4b248d31996911f08a90da3409f3c8c25efc5c22dda0cb47",
@@ -6,7 +10,10 @@
     "ADMIN_PASSWORD": "Rakazim2025!",
     "FREE_MODE": "true",
     "ALLOW_PAID_MESSAGING": "false",
-    "MESSAGING_PROVIDER": "mock"
+    "MESSAGING_PROVIDER": "mock",
+    "SUPABASE_URL": "https://gmuvmdffvvzyrjjpxjdr.supabase.co",
+    "SUPABASE_ANON_KEY": "sb_publishable_CxEFPe6WT0dh7NUKzkE81Q_ZF7FptSz",
+    "SUPABASE_SERVICE_ROLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtdXZtZGZmdnZ6eXJqanB4amRyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDk0NTg0MiwiZXhwIjoyMDk2NTIxODQyfQ.AFCw1QODXG2u8qDHEPtWw0VNdSn0hjL_GwuPj6vPz98"
   },
   "crons": [
     {
