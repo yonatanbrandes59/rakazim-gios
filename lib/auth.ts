@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { AuthUser } from './types'
 import { getStore } from './store'
+import { coordinatorsDb } from './db'
 
 // In production at runtime, JWT_SECRET must be set. Skip during next build phase.
 if (
@@ -117,8 +118,7 @@ export async function hashPassword(password: string): Promise<string> {
 // Verify coordinator credentials (stored in the in-memory store or Supabase)
 // password_hash === 'demo' is accepted only in demo/dev mode (USE_SUPABASE=false).
 export async function verifyCoordinatorCredentials(email: string, password: string) {
-  const store = getStore()
-  const coord = store.regional_coordinators.find(c => c.email === email)
+  const coord = await coordinatorsDb.findByEmail(email)
   if (!coord || !coord.password_hash) return null
   // Legacy demo sentinel — only valid in demo mode (no real Supabase configured)
   if (coord.password_hash === 'demo') return coord
