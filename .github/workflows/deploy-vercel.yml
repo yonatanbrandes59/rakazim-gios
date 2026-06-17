@@ -11,12 +11,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Notify deploy
-        run: |
-          echo "✅ Push to master detected — Vercel auto-deploy triggered"
-          echo "📋 Survey URL: https://rakazim-gios.vercel.app/apply"
-          echo "🔧 Admin URL:  https://rakazim-gios.vercel.app/admin"
-          echo ""
-          echo "Environment variables are configured via vercel.json"
-          echo "If you need to update secrets, go to:"
-          echo "https://vercel.com/yonatanbrandes59/rakazim-gios/settings/environment-variables"
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          working-directory: ./
