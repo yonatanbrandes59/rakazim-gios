@@ -8,6 +8,7 @@
     "ALLOW_PAID_MESSAGING": "true",
     "MESSAGING_PROVIDER": "kapso",
     "KAPSO_API_KEY": "f3b2dfbddea72d5bd4c751d0737cf948cd06a5c38d38638a48f336e10fb01ad8",
+    "KAPSO_PHONE_NUMBER_ID": "1107262059146926",
     "SUPABASE_URL": "https://gmuvmdffvvzyrjjpxjdr.supabase.co",
     "SUPABASE_ANON_KEY": "sb_publishable_CxEFPe6WT0dh7NUKzkE81Q_ZF7FptSz",
     "SUPABASE_SERVICE_ROLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtdXZtZGZmdnZ6eXJqanB4amRyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDk0NTg0MiwiZXhwIjoyMDk2NTIxODQyfQ.AFCw1QODXG2u8qDHEPtWw0VNdSn0hjL_GwuPj6vPz98",
