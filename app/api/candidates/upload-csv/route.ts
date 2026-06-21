@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/auth'
 import { candidatesDb, activityDb } from '@/lib/db'
+import { sendOpeningToCandidates } from '@/services/messagingService'
 import { parse } from 'csv-parse/sync'
 
 // CSV column mapping (Hebrew or English headers)
@@ -47,8 +48,8 @@ export async function POST(req: NextRequest) {
       if (key) mapped[key] = value
     }
 
-    if (!mapped.first_name || !mapped.last_name || !mapped.phone) {
-      errors.push(`שורה ${i + 2}: חסרים שדות חובה (שם פרטי, שם משפחה, טלפון)`)
+    if (!mapped.first_name || !mapped.phone) {
+      errors.push(`שורה ${i + 2}: חסרים שדות חובה (שם פרטי, טלפון)`)
       continue
     }
 
@@ -76,9 +77,18 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Optionally send opening messages to all created candidates
+  const sendOpening = req.nextUrl.searchParams.get('send_opening') === 'true'
+  let sent = 0
+  if (sendOpening && created.length > 0) {
+    await sendOpeningToCandidates(created)
+    sent = created.length
+  }
+
   return NextResponse.json({
     ok: true,
     created: created.length,
+    sent,
     errors: errors.length,
     error_details: errors,
   })
