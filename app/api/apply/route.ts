@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   const lastName = answerMap.last_name?.trim()
   const phone = answerMap.phone?.trim()
 
-  if (!firstName || !lastName || !phone) {
+  if (!firstName || !phone) {
     return NextResponse.json({ error: 'שם ומספר טלפון הם שדות חובה' }, { status: 400 })
   }
 
@@ -44,9 +44,11 @@ export async function POST(req: NextRequest) {
 
   const candidate = await candidatesDb.create({
     first_name: firstName,
-    last_name: lastName,
+    last_name: lastName || '',
     phone,
     email: answerMap.email || undefined,
+    garin: answerMap.garin || undefined,
+    garin_year: answerMap.garin_year || undefined,
     army_role: answerMap.army_role || undefined,
     release_date: answerMap.release_date || undefined,
     notes: `הגיע דרך: ${sourceLabel[source] || source}`,
