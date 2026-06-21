@@ -83,16 +83,30 @@ async function dispatch(
 
 // ── Public API ─────────────────────────────────────────────────────────────
 
+const FALLBACK_OPENING_TEMPLATE = `היי {firstName}! 👋
+
+פונה אליך מטעם *האיחוד החקלאי* כי היית בעבר בגרעין — ועכשיו שאתה לקראת שחרור / אחרי שחרור, אנחנו מחפשים את דור רכזי הנוער הבא 🌾
+
+תפקיד רכז/ת נוער / רכז/ת סניף זה הזדמנות אמיתית:
+• עבודה משמעותית עם נוער בקיבוץ / מושב
+• קהילה, השפעה וצמיחה אישית
+• תפקיד שמחכה לך עם אנשים שמאמינים בך
+
+שאלון קצר ולא מחייב שיעזור לנו להבין מה מתאים לך:
+{questionnaireLink}
+
+אם זה לא רלוונטי, אפשר להשיב "לא מעוניין" 🙏`
+
 export async function sendOpeningToCandidates(candidateIds: string[]): Promise<void> {
   const template = await templatesDb.findByKey('opening_to_candidate')
-  if (!template) throw new Error('Template not found: opening_to_candidate')
+  const templateBody = template?.body ?? FALLBACK_OPENING_TEMPLATE
 
   for (const cid of candidateIds) {
     const candidate = await candidatesDb.findById(cid)
     if (!candidate || candidate.opt_out) continue
 
     const vars = buildCandidateVars(candidate)
-    const body = fillTemplate(template.body, vars)
+    const body = fillTemplate(templateBody, vars)
     const scheduledFor = nextSendingWindow().toISOString()
 
     const result = await dispatch('whatsapp', candidate.phone, candidate.email, 'הצטרפי לרכזים בדרך', body)
