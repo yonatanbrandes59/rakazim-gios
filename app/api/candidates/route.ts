@@ -12,7 +12,7 @@ const PHONE_REGEX = /^(\+972|0)(5[0-9])\d{7}$/
 
 const CreateCandidateSchema = z.object({
   first_name:  z.string().min(1, 'שם פרטי חובה').max(50),
-  last_name:   z.string().min(1, 'שם משפחה חובה').max(50),
+  last_name:   z.string().max(50).optional().default(''),
   phone:       z.string().regex(PHONE_REGEX, 'מספר טלפון לא תקין'),
   email:       z.string().email('כתובת אימייל לא תקינה').optional().or(z.literal('')),
   garin:       z.string().max(100).optional(),

@@ -25,6 +25,7 @@ export function AddCandidateModal({ coordinators, onClose, onCreated }: Props) {
     notes: '',
   })
   const [saving, setSaving] = useState(false)
+  const [sendOpening, setSendOpening] = useState(false)
   const [error, setError] = useState('')
 
   function set(key: string, val: string) {
@@ -33,14 +34,15 @@ export function AddCandidateModal({ coordinators, onClose, onCreated }: Props) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.first_name || !form.last_name || !form.phone) {
-      setError('שדות חובה: שם פרטי, שם משפחה, טלפון')
+    if (!form.first_name || !form.phone) {
+      setError('שדות חובה: שם פרטי, טלפון')
       return
     }
     setSaving(true)
     setError('')
     try {
-      const res = await fetch('/api/candidates', {
+      const url = sendOpening ? '/api/candidates?send_opening=true' : '/api/candidates'
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
@@ -59,7 +61,7 @@ export function AddCandidateModal({ coordinators, onClose, onCreated }: Props) {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <Input label="שם פרטי *" value={form.first_name} onChange={e => set('first_name', e.target.value)} required />
-          <Input label="שם משפחה *" value={form.last_name} onChange={e => set('last_name', e.target.value)} required />
+          <Input label="שם משפחה" value={form.last_name} onChange={e => set('last_name', e.target.value)} />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <Input label="טלפון *" type="tel" value={form.phone} onChange={e => set('phone', e.target.value)} ltr required />
@@ -90,9 +92,18 @@ export function AddCandidateModal({ coordinators, onClose, onCreated }: Props) {
             placeholder="הערות ראשוניות..."
           />
         </div>
+        <label className="flex items-center gap-2 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={sendOpening}
+            onChange={e => setSendOpening(e.target.checked)}
+            className="w-4 h-4 rounded text-green-600"
+          />
+          <span className="text-sm text-gray-700">📲 שלח הודעת פתיחה בוואטסאפ מיד לאחר הוספה</span>
+        </label>
         {error && <p className="text-red-600 text-sm bg-red-50 rounded-lg p-2">{error}</p>}
         <div className="flex gap-2 pt-2">
-          <Button type="submit" loading={saving}>➕ הוסף מועמד</Button>
+          <Button type="submit" loading={saving}>{sendOpening ? '➕ הוסף ושלח הודעה' : '➕ הוסף מועמד'}</Button>
           <Button type="button" variant="secondary" onClick={onClose}>ביטול</Button>
         </div>
       </form>
