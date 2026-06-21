@@ -78,16 +78,29 @@ export function CandidatesDashboard({ initialCandidates, coordinators, stats }: 
     }
   }
 
-  async function handleSendOne(candidateId: string, e: React.MouseEvent) {
+  function buildOpeningMessage(c: Candidate): string {
+    const base = process.env.NEXT_PUBLIC_APP_URL || 'https://rakazim-gios.vercel.app'
+    return `היי ${c.first_name}! 👋
+
+פונה אליך מטעם *האיחוד החקלאי* כי היית בעבר בגרעין — ועכשיו שאתה לקראת שחרור / אחרי שחרור, אנחנו מחפשים את דור רכזי הנוער הבא 🌾
+
+תפקיד רכז/ת נוער / רכז/ת סניף זו הזדמנות אמיתית:
+• עבודה משמעותית עם נוער בקיבוץ / מושב
+• קהילה, השפעה וצמיחה אישית
+• תפקיד שמחכה לך עם אנשים שמאמינים בך
+
+שאלון קצר ולא מחייב:
+${base}/questionnaire/${c.candidate_token}
+
+אם זה לא רלוונטי, אפשר להשיב "לא מעוניין" 🙏`
+  }
+
+  function openWhatsApp(c: Candidate, e: React.MouseEvent) {
     e.stopPropagation()
-    if (!confirm('לשלוח הודעת פתיחה למועמד זה?')) return
-    const res = await fetch('/api/messages/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'send_opening', candidate_ids: [candidateId] }),
-    })
-    const data = await res.json()
-    alert(data.ok ? '✅ ההודעה נשלחה בוואטסאפ!' : `שגיאה: ${data.error || 'לא ידוע'}`)
+    const msg = buildOpeningMessage(c)
+    const phone = c.phone.replace(/\D/g, '')
+    const intl = phone.startsWith('0') ? '972' + phone.slice(1) : phone
+    window.open(`https://wa.me/${intl}?text=${encodeURIComponent(msg)}`, '_blank')
   }
 
   function toggleSelect(id: string) {
@@ -230,22 +243,13 @@ export function CandidatesDashboard({ initialCandidates, coordinators, stats }: 
                       </span>
                     </td>
                     <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={e => handleSendOne(c.id, e)}
-                          className="bg-green-500 hover:bg-green-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
-                          title="שלח הודעת פתיחה בוואטסאפ"
-                        >
-                          📲 שלח
-                        </button>
-                        <a
-                          href={createWhatsAppLink(c.phone, `היי ${c.first_name}! 👋`)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-green-600 hover:text-green-700 text-lg"
-                          title="פתח בוואטסאפ ידני"
-                        >💬</a>
-                      </div>
+                      <button
+                        onClick={e => openWhatsApp(c, e)}
+                        className="bg-green-500 hover:bg-green-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1"
+                        title="פתח וואטסאפ עם הודעת פתיחה"
+                      >
+                        💬 שלח
+                      </button>
                     </td>
                   </tr>
                 ))}
