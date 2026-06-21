@@ -14,6 +14,7 @@ import { mockSendWhatsApp, mockSendEmail } from './providers/mockProvider'
 import { resendSendEmail } from './providers/resendProvider'
 import { whatsappCloudSend } from './providers/whatsappCloudProvider'
 import { kapsoSend, isKapsoReady } from './providers/kapsoProvider'
+import { greenApiSend, isGreenApiReady } from './providers/greenApiProvider'
 import { formatDate } from '@/lib/utils'
 import { getAppUrl } from '@/lib/appUrl'
 
@@ -53,7 +54,13 @@ async function dispatch(
     if (!phone) return { status: 'failed', error: 'No phone number' }
     const manualLink = createWhatsAppLink(phone, body)
 
-    // Use Kapso if configured
+    // Green API (QR-based, no Meta approval needed)
+    if (isGreenApiReady()) {
+      const result = await greenApiSend(phone, body)
+      return { ...result, whatsappManualLink: manualLink }
+    }
+
+    // Kapso fallback
     if (isKapsoReady()) {
       const result = await kapsoSend(phone, body)
       return { ...result, whatsappManualLink: manualLink }
