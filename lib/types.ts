@@ -81,6 +81,7 @@ export type CandidateStatus =
   | 'not_relevant'
   | 'not_interested'
   | 'follow_up_later'
+  | 'delete_requested'
 
 export const CANDIDATE_STATUS_LABELS: Record<CandidateStatus, string> = {
   new:                    'חדש',
@@ -95,6 +96,7 @@ export const CANDIDATE_STATUS_LABELS: Record<CandidateStatus, string> = {
   not_relevant:           'לא רלוונטי',
   not_interested:         'לא מעוניין',
   follow_up_later:        'מעקב עתידי',
+  delete_requested:       'בקשת מחיקה',
 }
 
 export const CANDIDATE_STATUS_COLORS: Record<CandidateStatus, string> = {
@@ -110,6 +112,7 @@ export const CANDIDATE_STATUS_COLORS: Record<CandidateStatus, string> = {
   not_relevant:           'bg-red-100 text-red-800',
   not_interested:         'bg-rose-100 text-rose-800',
   follow_up_later:        'bg-orange-100 text-orange-800',
+  delete_requested:       'bg-red-200 text-red-900',
 }
 
 export type InterestLevel =
