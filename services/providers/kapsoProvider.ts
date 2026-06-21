@@ -26,11 +26,11 @@ async function callKapsoApi(payload: object): Promise<SendResult> {
 
   try {
     const res = await fetch(
-      `https://api.kapso.ai/meta/whatsapp/v19.0/${phoneNumberId}/messages`,
+      `https://api.kapso.ai/meta/whatsapp/v24.0/${phoneNumberId}/messages`,
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
+          'X-API-Key': apiKey,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ messaging_product: 'whatsapp', ...payload }),
