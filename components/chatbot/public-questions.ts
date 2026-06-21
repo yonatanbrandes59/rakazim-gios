@@ -34,22 +34,30 @@ export const PUBLIC_QUESTIONS: ChatStep[] = [
     optional: true,
   },
 
-  // Q5: How did you hear
+  // Q5: Garin name
   {
-    key: 'source',
-    questionText: 'איך שמעת עלינו?',
+    key: 'garin',
+    questionText: 'באיזה גרעין היית?',
+    type: 'text',
+    placeholder: 'שם הגרעין / קיבוץ / מושב',
+  },
+
+  // Q6: Garin year
+  {
+    key: 'garin_year',
+    questionText: 'באיזו שנה היית בגרעין?',
     type: 'options',
     options: [
-      { value: 'facebook', label: '📘 פייסבוק' },
-      { value: 'friend', label: '👥 חבר/ה' },
-      { value: 'instagram', label: '📸 אינסטגרם' },
-      { value: 'google', label: '🔍 גוגל' },
-      { value: 'event', label: '🎪 אירוע / כנס' },
-      { value: 'other', label: '✨ אחר' },
+      { value: '2020', label: '2020' },
+      { value: '2021', label: '2021' },
+      { value: '2022', label: '2022' },
+      { value: '2023', label: '2023' },
+      { value: '2024', label: '2024' },
+      { value: '2025', label: '2025' },
     ],
   },
 
-  // Q6: Army role (optional)
+  // Q7: Army role (optional)
   {
     key: 'army_role',
     questionText: 'מה היה תפקידך בצבא? (רשות – ניתן לדלג)',
@@ -58,7 +66,22 @@ export const PUBLIC_QUESTIONS: ChatStep[] = [
     optional: true,
   },
 
-  // Q7: Release date
+  // Q8: How did you hear
+  {
+    key: 'source',
+    questionText: 'איך שמעת עלינו?',
+    type: 'options',
+    options: [
+      { value: 'facebook', label: '📘 פייסבוק' },
+      { value: 'friend', label: '👥 חבר/ה' },
+      { value: 'instagram', label: '📸 אינסטגרם' },
+      { value: 'whatsapp_msg', label: '💬 הודעת וואטסאפ' },
+      { value: 'event', label: '🎪 אירוע / כנס' },
+      { value: 'other', label: '✨ אחר' },
+    ],
+  },
+
+  // Q9: Release date
   {
     key: 'release_date',
     questionText: 'מתי אתה/את משתחרר/ת מהצבא? (תאריך שחרור)',
