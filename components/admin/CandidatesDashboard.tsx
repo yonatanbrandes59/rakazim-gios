@@ -61,16 +61,33 @@ export function CandidatesDashboard({ initialCandidates, coordinators, stats }: 
     if (selectedIds.size === 0) { alert('בחרי מועמדים לפני שליחה'); return }
     setSending(true)
     try {
-      await fetch('/api/messages/send', {
+      const res = await fetch('/api/messages/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'send_opening', candidate_ids: Array.from(selectedIds) }),
       })
-      alert(`✅ הועבר בהצלחה: ${selectedIds.size} הודעות. לחץ "פתח בוואטסאפ" בדשבורד ההודעות לשליחה.`)
+      const data = await res.json()
+      if (data.ok) {
+        alert(`✅ נשלח בהצלחה: ${selectedIds.size} הודעות וואטסאפ`)
+      } else {
+        alert(`שגיאה: ${data.error || 'לא ידוע'}`)
+      }
       setSelectedIds(new Set())
     } finally {
       setSending(false)
     }
+  }
+
+  async function handleSendOne(candidateId: string, e: React.MouseEvent) {
+    e.stopPropagation()
+    if (!confirm('לשלוח הודעת פתיחה למועמד זה?')) return
+    const res = await fetch('/api/messages/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'send_opening', candidate_ids: [candidateId] }),
+    })
+    const data = await res.json()
+    alert(data.ok ? '✅ ההודעה נשלחה בוואטסאפ!' : `שגיאה: ${data.error || 'לא ידוע'}`)
   }
 
   function toggleSelect(id: string) {
@@ -213,13 +230,22 @@ export function CandidatesDashboard({ initialCandidates, coordinators, stats }: 
                       </span>
                     </td>
                     <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                      <a
-                        href={createWhatsAppLink(c.phone, `היי ${c.first_name}! 👋\n\nפונה אליך כי היית בעבר בגרעין, ועכשיו כשאתה לקראת שחרור / אחרי שחרור מהצבא, אנחנו בודקים התאמות לתפקידי רכז/ת נוער / רכז/ת סניף.\n\nשאלון קצר ולא מחייב:\n${typeof window !== 'undefined' ? window.location.origin : ''}/questionnaire/${c.candidate_token}\n\nאם זה לא רלוונטי, אפשר להשיב "לא מעוניין" 🙏`)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-green-600 hover:text-green-700 text-lg"
-                        title="פתח בוואטסאפ"
-                      >💬</a>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={e => handleSendOne(c.id, e)}
+                          className="bg-green-500 hover:bg-green-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
+                          title="שלח הודעת פתיחה בוואטסאפ"
+                        >
+                          📲 שלח
+                        </button>
+                        <a
+                          href={createWhatsAppLink(c.phone, `היי ${c.first_name}! 👋`)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-green-600 hover:text-green-700 text-lg"
+                          title="פתח בוואטסאפ ידני"
+                        >💬</a>
+                      </div>
                     </td>
                   </tr>
                 ))}
