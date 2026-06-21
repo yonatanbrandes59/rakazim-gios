@@ -138,7 +138,8 @@ export function PublicChatbotClient() {
       setTimeout(() => {
         addBotMsg(
           'לפני שנסיים — נדרשת הסכמתך לעיבוד המידע שלך.\n\n' +
-          'האיחוד החקלאי ישמור את פרטיך ותשובותיך לצורך הערכת התאמתך לתפקיד רכז/ת נוער, ויצור עמך קשר. המידע ישמר למשך שנתיים לכל היותר.\n\n' +
+          'האיחוד החקלאי ישמור את פרטיך ותשובותיך לצורך הערכת התאמתך לתפקיד רכז/ת נוער, ויצור עמך קשר. המידע ישמר עד שנתיים ולא יועבר לגורמים מסחריים.\n\n' +
+          'לפרטים נוספים: rakazim-gios.vercel.app/privacy\n\n' +
           'האם אתה/את מסכים/ה לעיבוד הנתונים שלך? ✅'
         )
         setAwaitingConsent(true)
@@ -362,8 +363,10 @@ export function PublicChatbotClient() {
       </div>
 
       {/* Footer */}
-      <div className="mt-4 text-white/30 text-xs text-center">
-        האיחוד החקלאי · גיוס רכזים ורכזות נוער
+      <div className="mt-4 text-white/30 text-xs text-center space-x-2">
+        <span>האיחוד החקלאי · גיוס רכזים ורכזות נוער</span>
+        <span>·</span>
+        <a href="/privacy" className="underline hover:text-white/50 transition-colors">מדיניות פרטיות</a>
       </div>
     </div>
   )
