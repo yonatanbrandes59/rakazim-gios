@@ -13,6 +13,7 @@ import { REGION_LABELS } from '@/lib/types'
 import { mockSendWhatsApp, mockSendEmail } from './providers/mockProvider'
 import { resendSendEmail } from './providers/resendProvider'
 import { whatsappCloudSend } from './providers/whatsappCloudProvider'
+import { kapsoSend, isKapsoReady } from './providers/kapsoProvider'
 import { formatDate } from '@/lib/utils'
 import { getAppUrl } from '@/lib/appUrl'
 
@@ -51,6 +52,12 @@ async function dispatch(
   if (channel === 'whatsapp') {
     if (!phone) return { status: 'failed', error: 'No phone number' }
     const manualLink = createWhatsAppLink(phone, body)
+
+    // Use Kapso if configured
+    if (isKapsoReady()) {
+      const result = await kapsoSend(phone, body)
+      return { ...result, whatsappManualLink: manualLink }
+    }
 
     if (FREE_MODE || !ALLOW_PAID) {
       // Use mock, but also create the manual link
