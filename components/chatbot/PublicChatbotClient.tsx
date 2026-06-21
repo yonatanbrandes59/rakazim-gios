@@ -2,12 +2,15 @@
 import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { PUBLIC_QUESTIONS } from './public-questions'
+import { OPEN_QUESTIONS } from './open-questions'
+import { ChatStep } from '@/lib/types'
 
 type Message = { role: 'bot' | 'user'; text: string }
 
 const STORAGE_KEY = 'merakzim_public_questionnaire'
 
-export function PublicChatbotClient() {
+export function PublicChatbotClient({ type = 'garin' }: { type?: 'garin' | 'open' }) {
+  const QUESTIONS: ChatStep[] = type === 'garin' ? PUBLIC_QUESTIONS : OPEN_QUESTIONS
   const [messages, setMessages] = useState<Message[]>([])
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({})
   const [step, setStep] = useState(0)
@@ -21,16 +24,16 @@ export function PublicChatbotClient() {
   const [submitSuccess, setSubmitSuccess] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
 
-  const currentQ = step < PUBLIC_QUESTIONS.length ? PUBLIC_QUESTIONS[step] : null
+  const currentQ = step < QUESTIONS.length ? QUESTIONS[step] : null
 
   function getNextStep(from: number, currentAnswers: Record<string, any>): number {
     let next = from + 1
-    while (next < PUBLIC_QUESTIONS.length) {
-      const q = PUBLIC_QUESTIONS[next]
+    while (next < QUESTIONS.length) {
+      const q = QUESTIONS[next]
       if (!q.condition || q.condition(currentAnswers)) return next
       next++
     }
-    return PUBLIC_QUESTIONS.length
+    return QUESTIONS.length
   }
 
   function persistAnswers(saved: Record<string, string | string[]>) {
@@ -52,8 +55,8 @@ export function PublicChatbotClient() {
 
     if (Object.keys(restoredAnswers).length > 0) {
       let firstUnanswered = 0
-      for (let i = 0; i < PUBLIC_QUESTIONS.length; i++) {
-        const q = PUBLIC_QUESTIONS[i]
+      for (let i = 0; i < QUESTIONS.length; i++) {
+        const q = QUESTIONS[i]
         if (q.condition && !q.condition(restoredAnswers)) continue
         if (restoredAnswers[q.key] !== undefined && restoredAnswers[q.key] !== '') {
           firstUnanswered = i + 1
@@ -62,7 +65,7 @@ export function PublicChatbotClient() {
         }
       }
       resumeStep = getNextStep(firstUnanswered - 1, restoredAnswers)
-      if (resumeStep >= PUBLIC_QUESTIONS.length) resumeStep = PUBLIC_QUESTIONS.length - 1
+      if (resumeStep >= QUESTIONS.length) resumeStep = QUESTIONS.length - 1
       setAnswers(restoredAnswers)
     }
 
@@ -78,9 +81,9 @@ export function PublicChatbotClient() {
         setTimeout(() => showQuestion(resumeStep, restoredAnswers), 1200)
       } else {
         addBotMsg(
-          'היי! 👋 ברוך/ה הבא/ה לשאלון הגיוס של האיחוד החקלאי 🌾\n\n' +
-          'אנחנו מחפשים בוגרי גרעינים שמשתחררים מהצבא לתפקידי רכז/ת נוער ורכז/ת סניף בקיבוצים ומושבים.\n\n' +
-          'כמה שאלות קצרות — פחות מ-5 דקות. מוכן/ה? 🚀'
+          type === 'garin'
+            ? 'היי! 👋 ברוך/ה הבא/ה לשאלון הגיוס של האיחוד החקלאי 🌾\n\nאנחנו מחפשים בוגרי גרעינים שמשתחררים מהצבא לתפקידי רכז/ת נוער ורכז/ת סניף בקיבוצים ומושבים.\n\nכמה שאלות קצרות — פחות מ-5 דקות. מוכן/ה? 🚀'
+            : 'היי! 👋 ברוך/ה הבא/ה לשאלון הגיוס של האיחוד החקלאי 🌾\n\nאנחנו מחפשים אנשים עם ניסיון ורצון לעסוק בנוער — לתפקידי רכז/ת נוער ורכז/ת סניף בקיבוצים ומושבים.\n\nכמה שאלות קצרות — פחות מ-5 דקות. מוכן/ה? 🚀'
         )
       }
     }, 500)
@@ -108,8 +111,8 @@ export function PublicChatbotClient() {
   }
 
   function showQuestion(stepIdx: number, currentAnswers: Record<string, any>) {
-    if (stepIdx >= PUBLIC_QUESTIONS.length) return
-    const q = PUBLIC_QUESTIONS[stepIdx]
+    if (stepIdx >= QUESTIONS.length) return
+    const q = QUESTIONS[stepIdx]
     if (q.condition && !q.condition(currentAnswers)) {
       showQuestion(getNextStep(stepIdx, currentAnswers), currentAnswers)
       return
@@ -119,7 +122,7 @@ export function PublicChatbotClient() {
   }
 
   function handleAnswer(value: string | string[]) {
-    const q = PUBLIC_QUESTIONS[step]
+    const q = QUESTIONS[step]
     if (!q) return
 
     const displayVal = Array.isArray(value)
@@ -133,7 +136,7 @@ export function PublicChatbotClient() {
     persistAnswers(newAnswers)
 
     const next = getNextStep(step, newAnswers)
-    if (next >= PUBLIC_QUESTIONS.length) {
+    if (next >= QUESTIONS.length) {
       setPendingAnswers(newAnswers)
       setTimeout(() => {
         addBotMsg(
@@ -168,7 +171,7 @@ export function PublicChatbotClient() {
     setSubmitting(true)
 
     try {
-      const answersArray = PUBLIC_QUESTIONS
+      const answersArray = QUESTIONS
         .filter(q => finalAnswers[q.key] !== undefined && finalAnswers[q.key] !== '')
         .map(q => {
           const val = finalAnswers[q.key]
@@ -205,7 +208,7 @@ export function PublicChatbotClient() {
   }
 
   const q = currentQ
-  const totalVisible = PUBLIC_QUESTIONS.filter(q => !q.condition || q.condition(answers)).length
+  const totalVisible = QUESTIONS.filter(q => !q.condition || q.condition(answers)).length
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-800 via-brand-700 to-blue-600 flex flex-col items-center justify-start p-4 pt-6">
@@ -225,11 +228,11 @@ export function PublicChatbotClient() {
         <div className="flex-1" />
         {!done && (
           <div className="text-right">
-            <div className="text-white text-xs font-bold">{Math.min(step + 1, PUBLIC_QUESTIONS.length)}/{totalVisible}</div>
+            <div className="text-white text-xs font-bold">{Math.min(step + 1, QUESTIONS.length)}/{totalVisible}</div>
             <div className="w-24 h-1.5 bg-white/30 rounded-full mt-1">
               <div
                 className="h-full bg-white rounded-full transition-all duration-500"
-                style={{ width: `${Math.min(((step + 1) / PUBLIC_QUESTIONS.length) * 100, 100)}%` }}
+                style={{ width: `${Math.min(((step + 1) / QUESTIONS.length) * 100, 100)}%` }}
               />
             </div>
           </div>
